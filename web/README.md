@@ -25,7 +25,7 @@ with every published theme (default: catppuccin mocha).
   new one, which replaces the old. Legacy KV blobs that stored a key are
   scrubbed on first discovery.
 - The deployable worker is the repo's shared `../workers/template-unified.js`,
-  imported via Vite `?raw` and injected exactly like the `deploy.js` CLI.
+  imported via Vite `?raw` and config-injected at deploy time.
 
 ## Local development
 
@@ -73,13 +73,12 @@ wrangler secret put SESSION_SECRET
 npm run deploy
 ```
 
-## How it fits the existing CLI
+## The worker template
 
-`../deploy.js` still works unchanged for CLI deploys. Both the CLI and this app
-inject models into the same `../workers/template-unified.js`. (Note: the template
-comment previously duplicated the quoted `"__DEPLOY_INJECT_CONFIG__"` token,
-which made the CLI's first-match `.replace()` hit the comment instead of the real
-assignment — that comment was fixed so both paths inject correctly.)
+The deployable worker is the repo's shared `../workers/template-unified.js`,
+imported via Vite `?raw` and config-injected at deploy time. (The template
+comment must not contain the quoted `"__DEPLOY_INJECT_CONFIG__"` token — the
+injection targets the exact code expression.)
 
 ## Layout
 

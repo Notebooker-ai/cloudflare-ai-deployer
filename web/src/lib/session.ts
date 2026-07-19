@@ -8,10 +8,16 @@
  */
 
 export interface SessionPayload {
-  /** User's scoped Cloudflare API token. */
-  cfToken: string;
-  /** Account id resolved once at auth time. */
-  accountId: string;
+  /** User's scoped Cloudflare API token (absent in credentials-only mode). */
+  cfToken?: string;
+  /** Account id resolved once at auth time (absent in credentials-only mode). */
+  accountId?: string;
+  /**
+   * Credentials-only mode: the user supplied just an endpoint URL + bearer
+   * key (e.g. from a downloaded credentials.txt) to test an existing
+   * deployment without any Cloudflare token.
+   */
+  endpoint?: { baseUrl: string; apiKey: string };
   /** Account's workers.dev subdomain (for building base URLs), if known. */
   subdomain?: string;
   /**

@@ -1,5 +1,5 @@
 import type { APIContext } from 'astro';
-import { requireSession, updateSession } from '../../../lib/auth';
+import { requireCfSession, updateSession } from '../../../lib/auth';
 import { cycleKey } from '../../../lib/deployer';
 import { json, toErrorResponse } from '../../../lib/util';
 
@@ -12,7 +12,7 @@ export const prerender = false;
  */
 export async function POST(ctx: APIContext) {
   try {
-    const { session, cf } = await requireSession(ctx);
+    const { session, cf } = await requireCfSession(ctx);
     const body = await ctx.request.json().catch(() => ({}));
     const workerName = (body.workerName ?? '') as string;
     if (!workerName) return json({ error: 'workerName is required' }, 400);

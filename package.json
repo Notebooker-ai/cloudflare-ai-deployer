@@ -1,16 +1,12 @@
 {
   "name": "cloudflare-ai-deployer",
   "version": "1.0.0",
-  "description": "Deploy an OpenAI-compatible endpoint backed by Cloudflare Workers AI in one command",
-  "main": "deploy.js",
+  "description": "Deploy and manage an OpenAI-compatible endpoint backed by Cloudflare Workers AI \u2014 hosted at open.notebooker.ai",
   "scripts": {
-    "deploy": "node deploy.js",
-    "deploy:dry-run": "node deploy.js --dry-run",
     "test": "vitest run",
     "test:watch": "vitest"
   },
   "dependencies": {
-    "cloudflare": "^4.0.0",
     "dotenv": "^16.3.0"
   },
   "devDependencies": {

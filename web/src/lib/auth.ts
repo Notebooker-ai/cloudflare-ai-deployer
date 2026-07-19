@@ -33,7 +33,8 @@ export async function getSession(ctx: Ctx): Promise<SessionPayload | null> {
 
 export interface AuthedContext {
   session: SessionPayload;
-  cf: CloudflareClient;
+  /** Null for credentials-only sessions (no Cloudflare token). */
+  cf: CloudflareClient | null;
 }
 
 /** Require a valid session; throws a 401 Response if absent/expired. */
@@ -52,7 +53,22 @@ export async function requireSession(ctx: Ctx): Promise<AuthedContext> {
   const resealed = await seal(renewed, getSecret(ctx));
   ctx.cookies.set(COOKIE_NAME, resealed, sessionCookieOptions(DEFAULT_TTL_SECONDS));
 
-  return { session, cf: new CloudflareClient(session.cfToken) };
+  return { session, cf: session.cfToken ? new CloudflareClient(session.cfToken) : null };
+}
+
+/** Like requireSession, but rejects credentials-only sessions (403). */
+export async function requireCfSession(ctx: Ctx): Promise<{
+  session: SessionPayload & { cfToken: string; accountId: string };
+  cf: CloudflareClient;
+}> {
+  const { session, cf } = await requireSession(ctx);
+  if (!cf || !session.cfToken || !session.accountId) {
+    throw new Response(
+      JSON.stringify({ error: 'This action needs a Cloudflare API token — unlock full management from the dashboard.' }),
+      { status: 403, headers: { 'Content-Type': 'application/json' } }
+    );
+  }
+  return { session: session as SessionPayload & { cfToken: string; accountId: string }, cf };
 }
 
 /** Establish a new session cookie after a token is verified. */

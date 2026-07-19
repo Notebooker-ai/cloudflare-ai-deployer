@@ -1,5 +1,92 @@
 import { useState } from 'react';
 
+function CredsGate() {
+  const [baseUrl, setBaseUrl] = useState('');
+  const [apiKey, setApiKey] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function readFile(f: File | null) {
+    if (!f) return;
+    setError(null);
+    const text = await f.text();
+    const url = text.match(/OPENAI_BASE_URL=(\S+)/)?.[1];
+    const key = text.match(/OPENAI_API_KEY=(\S+)/)?.[1];
+    if (url) setBaseUrl(url);
+    if (key) setApiKey(key);
+    if (!url || !key) setError('Could not find OPENAI_BASE_URL / OPENAI_API_KEY in that file.');
+  }
+
+  async function go(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    setBusy(true);
+    try {
+      const res = await fetch('/api/session/creds', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ baseUrl: baseUrl.trim(), apiKey: apiKey.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Could not verify credentials');
+      window.location.href = '/dashboard';
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Something went wrong');
+      setBusy(false);
+    }
+  }
+
+  return (
+    <form onSubmit={go} className="panel mt-6 min-w-0">
+      <div>
+        <span is-="badge" variant-="background2">
+          just testing?
+        </span>
+      </div>
+      <h3 className="mt-3 font-bold">Already deployed? Skip the token.</h3>
+      <p className="mt-2 text-fg1">
+        Upload the <span className="text-ok">credentials.txt</span> you downloaded (or enter your
+        endpoint and key) to go straight to the dashboard and test your existing models — no
+        Cloudflare token needed. Usage and model management stay locked until you provide one.
+      </p>
+      <div className="mt-4 grid gap-4 md:grid-cols-2">
+        <div className="min-w-0">
+          <label className="mb-1 block text-accent2">credentials_file:</label>
+          <input
+            type="file"
+            accept=".txt,text/plain"
+            onChange={(e) => readFile(e.target.files?.[0] ?? null)}
+          />
+        </div>
+        <div className="min-w-0">
+          <label className="mb-1 block text-accent2">base_url:</label>
+          <input
+            className="w-full"
+            placeholder="https://your-worker.your-subdomain.workers.dev/v1"
+            value={baseUrl}
+            onChange={(e) => setBaseUrl(e.target.value)}
+            spellCheck={false}
+          />
+          <label className="mt-3 mb-1 block text-accent2">api_key:</label>
+          <input
+            type="password"
+            className="w-full"
+            placeholder="your endpoint bearer key"
+            value={apiKey}
+            onChange={(e) => setApiKey(e.target.value)}
+            autoComplete="off"
+            spellCheck={false}
+          />
+        </div>
+      </div>
+      {error && <p className="mt-3 font-bold text-danger">! {error}</p>}
+      <button className="mt-4" disabled={busy || !baseUrl.trim() || !apiKey.trim()}>
+        {busy ? 'verifying…' : 'test my endpoint'}
+      </button>
+    </form>
+  );
+}
+
 export default function TokenGate() {
   const [token, setToken] = useState('');
   const [loading, setLoading] = useState(false);
@@ -26,6 +113,7 @@ export default function TokenGate() {
   }
 
   return (
+    <>
     <div className="grid gap-6 md:grid-cols-[1fr_0.9fr]">
       <form onSubmit={submit} className="panel min-w-0">
         <div>
@@ -139,5 +227,7 @@ export default function TokenGate() {
         )}
       </div>
     </div>
+    <CredsGate />
+    </>
   );
 }

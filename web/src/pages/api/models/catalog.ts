@@ -1,5 +1,5 @@
 import type { APIContext } from 'astro';
-import { requireSession } from '../../../lib/auth';
+import { requireCfSession } from '../../../lib/auth';
 import { MODEL_SLOTS } from '../../../lib/template';
 import { json, toErrorResponse } from '../../../lib/util';
 
@@ -13,7 +13,7 @@ const EXCLUDED_MODELS = new Set([
 /** Live Workers AI catalog, grouped by our model slots. Powers the pickers. */
 export async function GET(ctx: APIContext) {
   try {
-    const { session, cf } = await requireSession(ctx);
+    const { session, cf } = await requireCfSession(ctx);
 
     const groups = await Promise.all(
       MODEL_SLOTS.map(async (slot) => {

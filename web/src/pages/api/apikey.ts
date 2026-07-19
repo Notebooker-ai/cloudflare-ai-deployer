@@ -1,5 +1,5 @@
 import type { APIContext } from 'astro';
-import { requireSession, updateSession } from '../../lib/auth';
+import { requireCfSession, requireSession, updateSession } from '../../lib/auth';
 import { sessionWorkerKey } from '../../lib/deployer';
 import { buildBaseUrl, json, sanitizeWorkerName, toErrorResponse } from '../../lib/util';
 
@@ -13,6 +13,9 @@ export const prerender = false;
 export async function GET(ctx: APIContext) {
   try {
     const { session } = await requireSession(ctx);
+    if (session.endpoint) {
+      return json({ apiKey: session.endpoint.apiKey, recoverable: true });
+    }
     const worker = new URL(ctx.request.url).searchParams.get('worker') ?? '';
     const apiKey = worker ? sessionWorkerKey(session.workerKeys, worker) : null;
     return json({ apiKey, recoverable: !!apiKey });
@@ -27,7 +30,7 @@ export async function GET(ctx: APIContext) {
  */
 export async function POST(ctx: APIContext) {
   try {
-    const { session, cf } = await requireSession(ctx);
+    const { session, cf } = await requireCfSession(ctx);
     const body = await ctx.request.json().catch(() => ({}));
     const workerName = sanitizeWorkerName((body.workerName ?? '').toString());
     const apiKey = (body.apiKey ?? '').toString().trim();

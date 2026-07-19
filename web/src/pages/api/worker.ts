@@ -1,5 +1,5 @@
 import type { APIContext } from 'astro';
-import { requireSession, updateSession } from '../../lib/auth';
+import { requireCfSession, requireSession, updateSession } from '../../lib/auth';
 import { discover, deploy } from '../../lib/deployer';
 import { json, toErrorResponse } from '../../lib/util';
 import { sanitizeWorkerName } from '../../lib/util';
@@ -11,6 +11,36 @@ export const prerender = false;
 export async function GET(ctx: APIContext) {
   try {
     const { session, cf } = await requireSession(ctx);
+
+    // Credentials-only mode: no Cloudflare access — describe the endpoint by
+    // asking it directly which models are live.
+    if (!cf || !session.accountId) {
+      const ep = session.endpoint;
+      if (!ep) return json({ error: 'Session has no Cloudflare access.' }, 403);
+      let models: Record<string, string> = {};
+      try {
+        const res = await fetch(`${ep.baseUrl}/models`, {
+          headers: { Authorization: `Bearer ${ep.apiKey}` },
+          signal: AbortSignal.timeout(15000),
+        });
+        if (res.ok) {
+          const parsed: any = await res.json();
+          for (const m of parsed.data ?? []) {
+            if (m.type && m.backend) models[m.type] = m.backend;
+          }
+        }
+      } catch {
+        /* endpoint unreachable; dashboard shows testers anyway */
+      }
+      return json({
+        kind: 'creds-only',
+        baseUrl: ep.baseUrl,
+        apiKey: ep.apiKey,
+        models,
+        subdomain: null,
+      });
+    }
+
     const subdomain = session.subdomain ?? (await cf.getWorkersSubdomain(session.accountId));
     const preferred = new URL(ctx.request.url).searchParams.get('worker') ?? undefined;
     const state = await discover(cf, session.accountId, subdomain, preferred);
@@ -23,7 +53,7 @@ export async function GET(ctx: APIContext) {
 /** Deploy (or redeploy) the worker with the chosen models. */
 export async function POST(ctx: APIContext) {
   try {
-    const { session, cf } = await requireSession(ctx);
+    const { session, cf } = await requireCfSession(ctx);
     const body = await ctx.request.json();
     const models = (body.models ?? {}) as ModelConfig;
     const workerNameRaw = (body.workerName ?? '') as string;

@@ -218,10 +218,18 @@ export function sessionWorkerKey(
  * (deploy/cycle), testing requires renewing the key first.
  */
 export async function resolveTestTarget(
-  cf: CloudflareClient,
-  session: { accountId: string; subdomain?: string; workerKeys?: Record<string, string> },
+  cf: CloudflareClient | null,
+  session: {
+    accountId?: string;
+    subdomain?: string;
+    workerKeys?: Record<string, string>;
+    endpoint?: { baseUrl: string; apiKey: string };
+  },
   workerName: string
 ): Promise<{ baseUrl: string; apiKey: string } | { error: string }> {
+  // Credentials-only mode: the session carries the target directly.
+  if (session.endpoint) return session.endpoint;
+
   const name = sanitizeWorkerName(workerName);
   const apiKey = sessionWorkerKey(session.workerKeys, name);
   if (!apiKey) {
@@ -230,6 +238,7 @@ export async function resolveTestTarget(
         'No endpoint key in this session — keys are never stored. Renew the API key on the dashboard, then try again.',
     };
   }
+  if (!cf || !session.accountId) return { error: 'Session has no Cloudflare access.' };
   const subdomain = session.subdomain ?? (await cf.getWorkersSubdomain(session.accountId));
   if (!subdomain) return { error: 'No workers.dev subdomain on this account.' };
   return { baseUrl: buildBaseUrl(name, subdomain), apiKey };

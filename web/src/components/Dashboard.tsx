@@ -15,7 +15,13 @@ const DEFAULT_MODELS: ModelConfig = {
   embedding: '@cf/baai/bge-base-en-v1.5',
 };
 
-type StateKind = 'first-visit' | 'healthy' | 'no-saved-config' | 'worker-missing' | 'drift';
+type StateKind =
+  | 'first-visit'
+  | 'healthy'
+  | 'no-saved-config'
+  | 'worker-missing'
+  | 'drift'
+  | 'creds-only';
 
 interface DeployerConfig {
   workerName: string;
@@ -30,6 +36,10 @@ interface DashboardState {
   config?: DeployerConfig;
   liveModels?: ModelConfig | null;
   subdomain: string | null;
+  /* creds-only mode */
+  baseUrl?: string;
+  apiKey?: string;
+  models?: ModelConfig;
 }
 
 export default function Dashboard() {
@@ -79,6 +89,7 @@ export default function Dashboard() {
   }
 
   const isOnboarding = state.kind === 'first-visit' || state.kind === 'worker-missing';
+  const isCredsOnly = state.kind === 'creds-only';
 
   return (
     <div className="space-y-6">
@@ -92,17 +103,146 @@ export default function Dashboard() {
               account subdomain: <span className="text-fg1">{state.subdomain}.workers.dev</span>
             </p>
           )}
+          {isCredsOnly && <p className="text-fg2">testing with credentials only</p>}
         </div>
         <button size-="small" variant-="background2" onClick={logout}>
           [sign out]
         </button>
       </div>
 
-      {isOnboarding ? (
+      {isCredsOnly ? (
+        <CredsOnly state={state} />
+      ) : isOnboarding ? (
         <Onboarding state={state} onDeployed={refresh} />
       ) : (
         <Manage state={state} />
       )}
+    </div>
+  );
+}
+
+function CredsOnly({ state }: { state: DashboardState }) {
+  const models = state.models ?? {};
+  const [revealed, setRevealed] = useState(false);
+  const [copied, setCopied] = useState<'key' | 'url' | null>(null);
+  const [token, setToken] = useState('');
+  const [unlocking, setUnlocking] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const key = state.apiKey ?? '';
+  const baseUrl = state.baseUrl ?? '';
+  const masked = key ? key.slice(0, 6) + '•'.repeat(20) + key.slice(-4) : '';
+
+  async function copy(text: string, which: 'key' | 'url') {
+    await navigator.clipboard.writeText(text);
+    setCopied(which);
+    setTimeout(() => setCopied(null), 1500);
+  }
+
+  function downloadCreds() {
+    const content = `# Open Notebooker — endpoint credentials\n\nOPENAI_BASE_URL=${baseUrl}\nOPENAI_API_KEY=${key}\n`;
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'endpoint-credentials.txt';
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  async function unlock(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    setUnlocking(true);
+    try {
+      const res = await fetch('/api/session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: token.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Could not verify token');
+      window.location.reload();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Something went wrong');
+      setUnlocking(false);
+    }
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="grid gap-6 lg:grid-cols-2">
+        <div className="panel min-w-0">
+          <div>
+            <span is-="badge" className="badge-accent">
+              endpoint
+            </span>
+          </div>
+          <label className="mt-4 mb-1 block text-accent2">base_url:</label>
+          <div className="flex items-center gap-2">
+            <code className="block min-w-0 flex-1 overflow-x-auto bg-bg1 px-2 py-1 whitespace-nowrap text-ok">
+              {baseUrl}
+            </code>
+            <button size-="small" variant-="background2" className="shrink-0" onClick={() => copy(baseUrl, 'url')}>
+              {copied === 'url' ? '[copied]' : '[copy]'}
+            </button>
+          </div>
+          <label className="mt-4 mb-1 block text-accent2">bearer_api_key:</label>
+          <div className="flex items-center gap-2">
+            <code className="block min-w-0 flex-1 overflow-x-auto bg-bg1 px-2 py-1 whitespace-nowrap text-ok">
+              {revealed ? key : masked}
+            </code>
+            <button size-="small" variant-="background2" className="shrink-0" onClick={() => setRevealed((r) => !r)}>
+              {revealed ? '[hide]' : '[reveal]'}
+            </button>
+            <button size-="small" variant-="background2" className="shrink-0" onClick={() => copy(key, 'key')}>
+              {copied === 'key' ? '[copied]' : '[copy]'}
+            </button>
+          </div>
+          <div className="mt-3">
+            <button size-="small" variant-="background2" onClick={downloadCreds}>
+              [&#xf019; download credentials.txt]
+            </button>
+          </div>
+        </div>
+
+        <form onSubmit={unlock} className="panel min-w-0">
+          <div>
+            <span is-="badge" variant-="background2">
+              unlock
+            </span>
+          </div>
+          <p className="mt-3 text-fg1">
+            Usage monitoring, model management, deploys, and key renewal need a scoped{' '}
+            <a href="/" target="_blank" rel="noreferrer">
+              Cloudflare API token
+            </a>
+            . Paste one to unlock — your endpoint credentials carry over.
+          </p>
+          <label className="mt-3 mb-1 block text-accent2">cloudflare_api_token:</label>
+          <input
+            type="password"
+            className="w-full"
+            placeholder="paste your scoped token"
+            value={token}
+            onChange={(e) => setToken(e.target.value)}
+            autoComplete="off"
+            spellCheck={false}
+          />
+          {error && <p className="mt-2 font-bold text-danger">! {error}</p>}
+          <button className="mt-4 w-full" disabled={unlocking || !token.trim()}>
+            {unlocking ? 'verifying…' : 'unlock full management'}
+          </button>
+        </form>
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        {models.chat && <ChatTester workerName="endpoint" />}
+        {models.text_to_speech && <TtsTester workerName="endpoint" />}
+        {models.speech_to_text && <SttTester workerName="endpoint" />}
+        {models.chat && <VisionTester workerName="endpoint" chatModel={models.chat} />}
+        {models.embedding && <EmbedTester workerName="endpoint" />}
+      </div>
     </div>
   );
 }

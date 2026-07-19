@@ -1,153 +1,59 @@
-# Cloudflare AI Deployer
+# Cloudflare AI Deployer — open.notebooker.ai
 
-Deploy an **OpenAI-compatible endpoint** backed by [Cloudflare Workers AI](https://developers.cloudflare.com/workers-ai/) to your own Cloudflare account. Pick the models you want and you get a URL + bearer key you can drop into any OpenAI SDK.
+Deploy an **OpenAI-compatible endpoint** backed by [Cloudflare Workers AI](https://developers.cloudflare.com/workers-ai/) to your own Cloudflare account — from your browser.
 
-Supports `chat/completions` (including vision models), `embeddings`, `audio/transcriptions`, and `audio/speech` — each endpoint is enabled only if you list a model for it.
+**Use it hosted at [open.notebooker.ai](https://open.notebooker.ai)**, or clone this repo and run the same app locally.
 
-There are **two ways to use this project**:
+Pick models from the live Cloudflare catalog, deploy, and test everything in the browser: streaming chat, text-to-speech, speech-to-text (file upload), vision (image upload), and embeddings similarity — plus an estimated free-tier usage monitor and a downloadable `credentials.txt` for your endpoint.
 
-| | |
-|---|---|
-| **[open.notebooker.ai](https://open.notebooker.ai)** | Hosted web app. Paste a scoped Cloudflare API token, pick models from the live catalog, deploy, and test chat / speech / vision / embeddings right in the browser. No install. Nothing is stored server-side — your token lives in an encrypted session cookie, config lives in your own account. |
-| **This repo (CLI)** | Clone, edit `models.json`, run `npm run deploy`. Good for scripting, CI, and version-controlled model config. |
+Supports `chat/completions` (including vision models), `embeddings`, `audio/transcriptions`, and `audio/speech` — each endpoint is enabled only if you pick a model for it.
 
-Both deploy the exact same worker (`workers/template-unified.js`).
+## How it works
 
-## Option 1 — the web app (easiest)
+- **No login, no database.** You paste a scoped Cloudflare API token; it lives only in an AES-GCM-encrypted, expiring `HttpOnly` cookie. Every Cloudflare call is proxied server-side, so the token never reaches the browser. Delete the token in Cloudflare when you're done — a new one restores access later.
+- **Config is remembered in *your* account.** Worker name + models (never secrets) are stored in a KV namespace in your own Cloudflare account and rediscovered on your next visit.
+- **The endpoint API key is never persisted anywhere.** It exists as the worker's write-only secret and, transiently, in your session cookie. Save it when it's shown (or download `credentials.txt`); renewing replaces it. Model changes never touch the key (the redeploy uses an `inherit` binding).
+- **Just testing?** Upload your `credentials.txt` (or enter base URL + key) on the homepage to use the testers without any Cloudflare token — management stays locked until you provide one.
 
-1. Open **[open.notebooker.ai](https://open.notebooker.ai)**.
-2. Follow the *Before you start* checklist (verify your Cloudflare email; visit
-   [Workers AI](https://dash.cloudflare.com/?to=/:account/ai/workers-ai) once so
-   your `workers.dev` subdomain gets registered).
-3. Create a **Custom API token** with: Workers Scripts *Edit*, Workers KV Storage
-   *Edit*, Workers AI *Read*, Account Analytics *Read* — scoped to your account.
-4. Paste it in, pick your models, hit deploy. Test everything in the browser and
-   download a `credentials.txt` with your base URL + key.
+## Using the app
 
-Your token is never stored (encrypted, expiring session cookie only), and neither
-is your endpoint key — save it when it's shown, or download the credentials file.
+1. Open **[open.notebooker.ai](https://open.notebooker.ai)** (or your local instance).
+2. Follow the *Before you start* checklist: verify your Cloudflare account email, and visit [Workers AI](https://dash.cloudflare.com/?to=/:account/ai/workers-ai) once so your `workers.dev` subdomain gets registered.
+3. Create a **Custom API token** at [dash.cloudflare.com → API Tokens](https://dash.cloudflare.com/profile/api-tokens), scoped to your account:
 
-## Option 2 — the CLI
+   | Resource            | Permission |
+   |---------------------|------------|
+   | Workers Scripts     | Edit       |
+   | Workers KV Storage  | Edit       |
+   | Workers AI          | Read       |
+   | Account Analytics   | Read       |
 
-### Prerequisites
+4. Paste it in, pick your models, deploy, test, and download your credentials.
 
-- Node.js 18+
-- A [Cloudflare account](https://dash.cloudflare.com/sign-up) (the free plan is enough to get started)
-- Your **Cloudflare Account ID** and a **Cloudflare API token** — see below
+> **Gated models:** some Meta models (e.g. `@cf/meta/llama-3.2-11b-vision-instruct`) need a one-time license agreement per account — if chat replies with a license notice, send the single message `agree` once.
+>
+> `@cf/deepgram/flux` is WebSocket-only and can't work through this request/response API (it's filtered from the picker).
 
-#### Find your Account ID
-
-1. Open the [Cloudflare dashboard](https://dash.cloudflare.com/).
-2. Pick any site, or go to **Workers & Pages** → **Overview**.
-3. Your Account ID is shown in the right-hand sidebar — click to copy.
-
-Direct link: **https://dash.cloudflare.com/?to=/:account/workers-and-pages**
-
-#### Create an API token
-
-1. Go to **https://dash.cloudflare.com/profile/api-tokens**.
-2. Click **Create Token** → **Create Custom Token**.
-3. Give it a name (e.g. `cloudflare-ai-deployer`) and add these permissions:
-
-   | Type     | Resource           | Permission |
-   |----------|--------------------|------------|
-   | Account  | Workers Scripts    | Edit       |
-   | Account  | Workers AI         | Read       |
-   | User     | User Details       | Read       |
-
-4. Under **Account Resources**, scope it to the account you got the Account ID from.
-5. Click **Continue to summary** → **Create Token** and copy the token (you only see it once).
-
-> The built-in **"Edit Cloudflare Workers"** template also works if you'd rather not pick permissions manually — it just grants more than is strictly needed.
-
-### Setup
+## Running locally
 
 ```bash
 git clone https://github.com/Notebooker-ai/cloudflare-ai-deployer
-cd cloudflare-ai-deployer
+cd cloudflare-ai-deployer/web
 npm install
-cp .env.example .env
+npm run dev            # http://localhost:4321
 ```
 
-Then open `.env` and fill in:
+`web/.dev.vars` ships with a dev-only `SESSION_SECRET`. Paste your scoped token on the landing page and you get the full dashboard against your own account. See [`web/README.md`](./web/README.md) for architecture, the security model, and deploying your own instance.
 
-```
-CLOUDFLARE_API_TOKEN=...
-CLOUDFLARE_ACCOUNT_ID=...
-```
+## Using your endpoint
 
-### Pick your models
-
-Open `models.json`. The keys are the four supported endpoint types; the values are Cloudflare Workers AI model ids. **Omit any key to disable that endpoint.**
-
-```json
-{
-  "chat": "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
-  "embedding": "@cf/baai/bge-base-en-v1.5",
-  "text_to_speech": "@cf/myshell-ai/melotts",
-  "speech_to_text": "@cf/openai/whisper-large-v3-turbo"
-}
-```
-
-Browse the full catalog and copy-paste any model id from the Cloudflare model directory:
-
-**https://developers.cloudflare.com/workers-ai/models/**
-
-Filter by task type to find a model for each slot:
-
-| `models.json` key | Cloudflare filter         | Example model ids |
-|-------------------|---------------------------|-------------------|
-| `chat`            | **Text Generation**       | `@cf/meta/llama-3.3-70b-instruct-fp8-fast`, `@cf/qwen/qwen3-30b-a3b-fp8` |
-| `embedding`       | **Text Embeddings**       | `@cf/baai/bge-base-en-v1.5`, `@cf/google/embeddinggemma-300m` |
-| `text_to_speech`  | **Text-to-Speech**        | `@cf/myshell-ai/melotts`, `@cf/deepgram/aura-2-en` |
-| `speech_to_text`  | **Automatic Speech Recognition** | `@cf/openai/whisper-large-v3-turbo`, `@cf/deepgram/nova-3` |
-
-If you want vision support, just use a vision-capable model under `chat` (e.g. `@cf/meta/llama-3.2-11b-vision-instruct`).
-
-> **Gated models:** some Meta models require a one-time license agreement per
-> Cloudflare account. If you get error 5016, send the single chat message
-> `agree` to your endpoint once — the worker forwards the agreement in the
-> format Cloudflare expects.
->
-> **Note:** `@cf/deepgram/flux` is WebSocket-only and won't work through this
-> request/response API.
-
-### Deploy
-
-```bash
-npm run deploy
-```
-
-On success it prints something like:
-
-```
-🌐 Your endpoint is live
-
-   Base URL:        https://cloudflare-ai.<your-subdomain>.workers.dev/v1
-   Bearer API key:  3f2a1c…  (64 hex chars)
-```
-
-(`<your-subdomain>` is your account's registered `workers.dev` subdomain.)
-
-The bearer key is auto-generated on first deploy and saved to `.env` as `API_KEY`. Re-running `npm run deploy` reuses it.
-
-To rename the worker subdomain, set `WORKER_NAME` in `.env` before deploying.
-
-To preview a deploy without touching Cloudflare:
-
-```bash
-npm run deploy:dry-run
-```
-
-## Use it
-
-Point any OpenAI-compatible client at the printed `Base URL` and use the printed key.
+Point any OpenAI-compatible client at your base URL with your bearer key:
 
 ```js
 import OpenAI from "openai";
 
 const client = new OpenAI({
-  baseURL: "https://cloudflare-ai.<your-subdomain>.workers.dev/v1",
+  baseURL: "https://<worker>.<your-subdomain>.workers.dev/v1",
   apiKey: "<your bearer key>",
 });
 
@@ -172,7 +78,7 @@ curl $BASE_URL/embeddings \
   -H "Content-Type: application/json" \
   -d '{"model":"embedding","input":"hello world"}'
 
-# Text-to-speech (writes wav)
+# Text-to-speech (writes audio file)
 curl $BASE_URL/audio/speech \
   -H "Authorization: Bearer $API_KEY" \
   -H "Content-Type: application/json" \
@@ -186,39 +92,17 @@ curl $BASE_URL/audio/transcriptions \
   -F "model=speech_to_text"
 ```
 
-The `model` field accepts either the type alias (`chat`, `embedding`, …) or the full Cloudflare model id you put in `models.json`.
+The `model` field accepts either the type alias (`chat`, `embedding`, `text_to_speech`, `speech_to_text`) or the full Cloudflare model id.
 
-## Use it with Notebooker.ai
+To use your endpoint inside **Notebooker.ai**, see the guide: **[Run your own AI provider](https://notebooker.ai/docs/custom-ai-provider/)**.
 
-[Notebooker.ai](https://app.notebooker.ai/) ships an embedded instance of [open-notebook](https://github.com/lfnovo/open-notebook) that can talk to any OpenAI-compatible endpoint — so you can point it at your freshly deployed worker.
+## Repo layout
 
-1. Open the API Keys settings: **https://app.notebooker.ai/open-notebook?path=settings%2Fapi-keys**
-2. Under **Models**, add a new **OpenAI Compatible** configuration.
-3. Fill in the modal:
-
-   ![Add Configuration modal in Notebooker](./img/notebooker-modal.png)
-
-   - **Configuration Name**: anything memorable (e.g. `Cloudflare Workers AI`)
-   - **API Key**: your endpoint's bearer key
-   - **Base URL**: your worker's base URL, e.g. `https://cloudflare-ai.<your-subdomain>.workers.dev/v1`
-
-4. Click **Add Configuration**. The models you configured are now available inside Notebooker using their type aliases (`chat`, `embedding`, `text_to_speech`, `speech_to_text`) or their full Cloudflare model ids.
-
-## Running the web app locally
-
-The hosted app at open.notebooker.ai lives in [`web/`](./web) (Astro on Cloudflare
-Workers). To run it locally:
-
-```bash
-cd web
-npm install
-npm run dev            # http://localhost:4321
 ```
-
-`web/.dev.vars` ships with a dev-only `SESSION_SECRET`. Paste a scoped Cloudflare
-API token on the landing page (permissions listed there) and you get the full
-dashboard against your own account. See [`web/README.md`](./web/README.md) for
-architecture, security model, and production deployment.
+workers/template-unified.js   the worker that gets deployed (single source of truth)
+web/                          the Astro app (open.notebooker.ai)
+test/                         vitest suite for the worker template
+```
 
 ## Tests
 
@@ -228,10 +112,11 @@ Unit tests run without credentials:
 npm test
 ```
 
-To run the integration suites against your deployed worker, set `OPENAI_BASE_URL` and `API_KEY` in `.env` (the deploy step already fills `API_KEY`):
+To run the integration suites against a deployed worker, create a `.env` with:
 
 ```
-OPENAI_BASE_URL=https://cloudflare-ai.<your-subdomain>.workers.dev/v1
+OPENAI_BASE_URL=https://<worker>.<your-subdomain>.workers.dev/v1
+API_KEY=<your bearer key>
 ```
 
-Then `npm test` again — the integration tests will auto-skip any endpoint type that isn't configured in `models.json`.
+Then `npm test` again — integration tests auto-skip any endpoint type that isn't deployed.

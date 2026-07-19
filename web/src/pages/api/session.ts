@@ -10,6 +10,7 @@ export async function GET(ctx: APIContext) {
   const session = await getSession(ctx);
   return json({
     authenticated: !!session,
+    mode: session ? (session.cfToken ? 'cloudflare' : 'creds') : null,
     accountId: session?.accountId ?? null,
     exp: session?.exp ?? null,
   });
@@ -63,10 +64,25 @@ export async function POST(ctx: APIContext) {
 
     const subdomain = await cf.getWorkersSubdomain(account.id);
 
+    // Upgrading from a credentials-only session: carry the endpoint key into
+    // workerKeys (worker name = first hostname label) so testers keep working.
+    const prior = await getSession(ctx);
+    let workerKeys: Record<string, string> | undefined = prior?.workerKeys;
+    if (prior?.endpoint) {
+      try {
+        const host = new URL(prior.endpoint.baseUrl).hostname;
+        const workerName = host.split('.')[0];
+        if (workerName) workerKeys = { ...workerKeys, [workerName]: prior.endpoint.apiKey };
+      } catch {
+        /* ignore malformed */
+      }
+    }
+
     await establishSession(ctx, {
       cfToken: token.trim(),
       accountId: account.id,
       subdomain: subdomain ?? undefined,
+      workerKeys,
     });
 
     return json({
