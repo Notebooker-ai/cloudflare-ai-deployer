@@ -66,7 +66,7 @@ export default function ApiKeyPanel({ workerName, baseUrl, initialKey }: Props) 
   return (
     <div className="panel min-w-0">
       <div className="flex items-center justify-between gap-2">
-        <span is-="badge" variant-="foreground0">
+        <span is-="badge" className="badge-accent">
           endpoint
         </span>
         <span is-="badge" variant-="background2">

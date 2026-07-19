@@ -29,7 +29,7 @@ export default function TokenGate() {
     <div className="grid gap-6 md:grid-cols-[1fr_0.9fr]">
       <form onSubmit={submit} className="panel min-w-0">
         <div>
-          <span is-="badge" variant-="foreground0">
+          <span is-="badge" className="badge-accent">
             auth
           </span>
         </div>

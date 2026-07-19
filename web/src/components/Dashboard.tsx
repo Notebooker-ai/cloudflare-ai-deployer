@@ -134,7 +134,7 @@ function Onboarding({ state, onDeployed }: { state: DashboardState; onDeployed: 
   return (
     <div className="panel">
       <div>
-        <span is-="badge" variant-="foreground0">
+        <span is-="badge" className="badge-accent">
           deploy
         </span>
       </div>

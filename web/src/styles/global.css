@@ -30,7 +30,7 @@
 
 @layer base {
   :root {
-    --accent: var(--foreground0);
+    --accent: #1d4ed8;
     --danger: #dc2626;
     --ok: #16a34a;
     --font-family: "Fira Code", "JetBrains Mono", ui-monospace, SFMono-Regular,
@@ -39,8 +39,45 @@
   }
 
   [data-webtui-theme="dark"] {
+    --accent: #60a5fa;
     --danger: #f87171;
     --ok: #4ade80;
+  }
+
+  /*
+    Surface each theme's own palette as semantic colors so the UI actually
+    uses the text colors the themes ship with (accent for emphasis/links,
+    danger/ok for status).
+  */
+  [data-webtui-theme^="catppuccin"] {
+    --accent: var(--mauve);
+    --danger: var(--red);
+    --ok: var(--green);
+  }
+  [data-webtui-theme^="gruvbox"] {
+    --accent: var(--gb-orange);
+    --danger: var(--gb-red);
+    --ok: var(--gb-green);
+  }
+  [data-webtui-theme="nord"] {
+    --accent: var(--nord8);
+    --danger: var(--nord11);
+    --ok: var(--nord14);
+  }
+  [data-webtui-theme^="everforest"] {
+    --accent: var(--green);
+    --danger: var(--red);
+    --ok: var(--aqua);
+  }
+  [data-webtui-theme^="vitesse"] {
+    --accent: var(--green);
+    --danger: var(--red);
+    --ok: var(--aqua);
+  }
+  [data-webtui-theme="osmium"] {
+    --accent: var(--purple-fg);
+    --danger: var(--red-fg);
+    --ok: var(--green-fg);
   }
 
   /* Terminal wrap behavior is authentic but hostile to prose — soften it. */
@@ -50,9 +87,9 @@
     overflow-wrap: break-word;
   }
 
-  /* Monochrome-friendly links: standing underline for affordance. */
+  /* Links carry the theme's accent color plus a standing underline. */
   a {
-    color: var(--foreground0);
+    color: var(--accent);
     text-decoration: underline;
   }
   a:hover {
@@ -113,7 +150,7 @@
     background-color: var(--background0);
     box-shadow:
       0 0 0 1px var(--background2),
-      0.75ch 0.5lh 0 0 var(--background1);
+      3px 3px 0 0 var(--background1);
     padding: 0.75lh 2ch 1lh;
   }
 
@@ -125,6 +162,12 @@
   }
   .note-danger {
     border-left-color: var(--danger);
+  }
+
+  /* Accent-tinted badge (primary section labels). */
+  [is-~='badge'].badge-accent {
+    --badge-color: var(--accent);
+    --badge-text: var(--background0);
   }
 }
 

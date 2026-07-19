@@ -44,7 +44,7 @@ export default function UsagePanel() {
   return (
     <div className="panel min-w-0">
       <div className="flex items-center justify-between gap-2">
-        <span is-="badge" variant-="foreground0">
+        <span is-="badge" className="badge-accent">
           neurons
         </span>
         <button size-="small" variant-="background2" onClick={load} disabled={loading}>
