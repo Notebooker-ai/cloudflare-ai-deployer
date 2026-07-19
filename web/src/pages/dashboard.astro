@@ -1,0 +1,15 @@
+---
+import Base from '../layouts/Base.astro';
+import Dashboard from '../components/Dashboard.tsx';
+import { getSession } from '../lib/auth';
+
+// Gate: no session -> back to the token screen.
+const session = await getSession(Astro);
+if (!session) return Astro.redirect('/');
+---
+
+<Base title="Dashboard — Open Notebooker">
+  <section class="mx-auto max-w-[1180px] px-4 pt-10 pb-20 sm:px-6">
+    <Dashboard client:load />
+  </section>
+</Base>

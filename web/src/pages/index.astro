@@ -1,0 +1,30 @@
+---
+import Base from '../layouts/Base.astro';
+import TokenGate from '../components/TokenGate.tsx';
+import { getSession } from '../lib/auth';
+
+// If already authenticated, jump straight to the dashboard.
+const session = await getSession(Astro);
+if (session) return Astro.redirect('/dashboard');
+---
+
+<Base>
+  <section class="mx-auto max-w-[1180px] px-4 pt-16 pb-12 sm:px-6 md:pt-24">
+    <p class="mb-4 font-sans text-[13px] font-semibold uppercase tracking-wide text-ink-faint">
+      Open Notebooker
+    </p>
+    <h1 class="max-w-3xl font-serif text-5xl font-normal leading-[1.05] tracking-tight md:text-6xl">
+      Deploy your own AI endpoint.<br />
+      <span class="text-accent dark:text-accent-invert">On your own Cloudflare.</span>
+    </h1>
+    <p class="mt-6 max-w-2xl font-sans text-lg text-ink-soft dark:text-ink-softinvert">
+      An OpenAI-compatible API backed by Cloudflare Workers AI — chat, speech, embeddings — deployed
+      to your account in one click. Pick your models, test it right here, copy your key. No signup,
+      no database, nothing stored on our side.
+    </p>
+  </section>
+
+  <section class="mx-auto max-w-[1180px] px-4 pb-20 sm:px-6">
+    <TokenGate client:load />
+  </section>
+</Base>

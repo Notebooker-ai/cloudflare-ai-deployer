@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="notebookGradient" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#bd34fe"/>
+      <stop offset="100%" stop-color="#41d1ff"/>
+    </linearGradient>
+  </defs>
+  <!-- The notebook IS the rounded square -->
+  <rect width="512" height="512" rx="112" fill="url(#notebookGradient)"/>
+  <!-- Left spine shadow (thinner: width 128) -->
+  <path d="M 0 112 A 112 112 0 0 1 112 0 L 128 0 L 128 512 L 112 512 A 112 112 0 0 1 0 400 Z" fill="rgba(0,0,0,0.15)"/>
+  <!-- Spiral binding rings (6, centered in spine, gap 72) -->
+  <g class="rings" fill="#ffffff">
+    <ellipse cx="64" cy="76" rx="22" ry="14"/>
+    <ellipse cx="64" cy="148" rx="22" ry="14"/>
+    <ellipse cx="64" cy="220" rx="22" ry="14"/>
+    <ellipse cx="64" cy="292" rx="22" ry="14"/>
+    <ellipse cx="64" cy="364" rx="22" ry="14"/>
+    <ellipse cx="64" cy="436" rx="22" ry="14"/>
+  </g>
+  <g class="ring-holes" fill="url(#notebookGradient)">
+    <ellipse cx="64" cy="76" rx="10" ry="6"/>
+    <ellipse cx="64" cy="148" rx="10" ry="6"/>
+    <ellipse cx="64" cy="220" rx="10" ry="6"/>
+    <ellipse cx="64" cy="292" rx="10" ry="6"/>
+    <ellipse cx="64" cy="364" rx="10" ry="6"/>
+    <ellipse cx="64" cy="436" rx="10" ry="6"/>
+  </g>
+  <!-- Knowledge graph connections (centered around x=320, y=206) -->
+  <g class="connections" stroke="#ffffff" stroke-width="3.5" opacity="0.6">
+    <line x1="320" y1="126" x2="240" y2="196"/>
+    <line x1="320" y1="126" x2="400" y2="196"/>
+    <line x1="240" y1="196" x2="320" y2="286"/>
+    <line x1="400" y1="196" x2="320" y2="286"/>
+  </g>
+  <!-- Knowledge graph nodes (animated pulse) -->
+  <g class="nodes">
+    <circle cx="320" cy="126" r="30" fill="#ffffff"/>
+    <circle cx="320" cy="126" r="38" stroke="#ffffff" stroke-width="2" fill="none" opacity="0.5"/>
+    <circle cx="240" cy="196" r="24" fill="#ffffff"/>
+    <circle cx="240" cy="196" r="32" stroke="#ffffff" stroke-width="2" fill="none" opacity="0.5"/>
+    <circle cx="400" cy="196" r="24" fill="#ffffff"/>
+    <circle cx="400" cy="196" r="32" stroke="#ffffff" stroke-width="2" fill="none" opacity="0.5"/>
+    <circle cx="320" cy="286" r="27" fill="#ffffff"/>
+    <circle cx="320" cy="286" r="35" stroke="#ffffff" stroke-width="2" fill="none" opacity="0.5"/>
+  </g>
+  <!-- Page lines (gap 28, all centered horizontally on x=320) -->
+  <g class="page-lines" stroke="#ffffff" stroke-width="4" stroke-linecap="round" opacity="0.4">
+    <line x1="192" y1="366" x2="448" y2="366"/>
+    <line x1="192" y1="394" x2="448" y2="394"/>
+    <line x1="240" y1="422" x2="400" y2="422"/>
+  </g>
+  <style>
+    @keyframes pulse {
+      0% { transform: scale(1); opacity: 0.8; }
+      50% { transform: scale(1.1); opacity: 1; }
+      100% { transform: scale(1); opacity: 0.8; }
+    }
+    .nodes circle {
+      animation: pulse 3s infinite ease-in-out;
+    }
+    .nodes circle:nth-child(2n) {
+      animation-delay: 1s;
+    }
+    .nodes circle:nth-child(3n) {
+      animation-delay: 2s;
+    }
+  </style>
+</svg>

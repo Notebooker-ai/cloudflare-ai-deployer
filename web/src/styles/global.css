@@ -1,0 +1,87 @@
+@import "tailwindcss";
+
+/* Class-based dark mode (matches notebooker.ai's `darkMode: 'class'`). */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+  "Paper & ink" palette mirrored from ../notebooker.ai (_includes/head.html).
+  Tailwind v4 derives utilities from these tokens, e.g.
+  --color-paper-card -> bg-paper-card / text-paper-card / border-paper-card.
+*/
+@theme {
+  --color-paper: #faf6ef;
+  --color-paper-card: #fffdf9;
+  --color-paper-deep: #f6f1e7;
+  --color-paper-code: #f0e9dc;
+
+  --color-night: #1b1712;
+  --color-night-card: #231e17;
+  --color-night-deep: #141110;
+  --color-night-code: #2c2620;
+
+  --color-line: #e3dcd0;
+  --color-line-soft: #ece5d8;
+  --color-line-dark: #3a332a;
+  --color-line-darksoft: #2e2821;
+
+  --color-ink: #211d18;
+  --color-ink-soft: #5c5347;
+  --color-ink-faint: #8a7f6c;
+  --color-ink-mute: #9a8f7d;
+  --color-ink-invert: #ece5d8;
+  --color-ink-softinvert: #b5aa97;
+
+  --color-accent: #4c2ea8;
+  --color-accent-soft: #d8cef2;
+  --color-accent-invert: #b7a5f0;
+  --color-accent-softinvert: #4a3b6e;
+
+  --font-sans: "Source Sans 3", system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", Roboto, sans-serif;
+  --font-serif: "Newsreader", Georgia, serif;
+}
+
+/* Base page treatment. */
+html {
+  background-color: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+}
+html.dark {
+  background-color: var(--color-night);
+  color: var(--color-ink-invert);
+}
+
+/* Reusable component classes echoing the notebooker.ai button/card patterns. */
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 font-sans font-semibold rounded-[3px] transition-colors disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  .btn-lg {
+    @apply px-7 py-3.5 text-base;
+  }
+  .btn-md {
+    @apply px-5 py-2.5 text-[15px];
+  }
+  .btn-sm {
+    @apply px-4 py-2 text-[13px];
+  }
+  .btn-primary {
+    @apply bg-ink text-paper hover:bg-accent dark:bg-ink-invert dark:text-night dark:hover:bg-accent;
+  }
+  .btn-outline {
+    @apply border border-ink text-ink hover:border-accent hover:text-accent dark:border-ink-invert dark:text-ink-invert dark:hover:border-accent-invert dark:hover:text-accent-invert;
+  }
+  .card {
+    @apply border border-line bg-paper-card rounded p-7 dark:border-line-dark dark:bg-night-card;
+  }
+  .card-featured {
+    @apply border-accent shadow-[6px_6px_0_#ece5d8] dark:border-accent-invert dark:shadow-[6px_6px_0_#2e2821];
+  }
+  .field {
+    @apply w-full rounded-[3px] border border-line bg-paper px-3 py-2 text-[15px] text-ink placeholder:text-ink-faint focus:border-accent focus:outline-none dark:border-line-dark dark:bg-night dark:text-ink-invert;
+  }
+  .label {
+    @apply block font-sans text-[13px] font-semibold uppercase tracking-wide text-ink-faint;
+  }
+}

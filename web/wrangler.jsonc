@@ -1,0 +1,23 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "notebooker-open",
+  "main": "./dist/_worker.js/index.js",
+  "compatibility_date": "2025-05-05",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS"
+  },
+  "observability": {
+    "enabled": true
+  },
+  // Astro's built-in session store (used by the adapter) needs a KV binding.
+  // We don't rely on it (auth is our own encrypted cookie), but the binding
+  // must exist. Created via: wrangler kv namespace create SESSION
+  "kv_namespaces": [
+    { "binding": "SESSION", "id": "33f3704dddcf494eab5667054e90fa17" }
+  ],
+  "routes": [
+    { "pattern": "open.notebooker.ai", "custom_domain": true }
+  ]
+}

@@ -2,7 +2,7 @@
  * OpenAI-compatible Cloudflare Worker for Workers AI.
  *
  * The CONFIG object (one model id per type) is injected at deploy time by
- * replacing the "__DEPLOY_INJECT_CONFIG__" placeholder. In tests, the same
+ * replacing the __DEPLOY_INJECT_CONFIG__ placeholder (see deploy.js). In tests, the same
  * shape is provided via globalThis.__MODELS_CONFIG__ (see test/setup.js).
  *
  * Endpoints (only enabled if the matching model is present in CONFIG):

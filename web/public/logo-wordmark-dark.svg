@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1990 200" fill="none">
+  <defs>
+    <linearGradient id="notebookGradient" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#bd34fe"/>
+      <stop offset="100%" stop-color="#41d1ff"/>
+    </linearGradient>
+  </defs>
+  <!-- Icon (square notebook) at 200x200, top-left at (0,0) -->
+  <g transform="scale(0.390625)">
+    <rect width="512" height="512" rx="112" fill="url(#notebookGradient)"/>
+    <path d="M 0 112 A 112 112 0 0 1 112 0 L 128 0 L 128 512 L 112 512 A 112 112 0 0 1 0 400 Z" fill="rgba(0,0,0,0.15)"/>
+    <g fill="#ffffff">
+      <ellipse cx="64" cy="76" rx="22" ry="14"/>
+      <ellipse cx="64" cy="148" rx="22" ry="14"/>
+      <ellipse cx="64" cy="220" rx="22" ry="14"/>
+      <ellipse cx="64" cy="292" rx="22" ry="14"/>
+      <ellipse cx="64" cy="364" rx="22" ry="14"/>
+      <ellipse cx="64" cy="436" rx="22" ry="14"/>
+    </g>
+    <g fill="url(#notebookGradient)">
+      <ellipse cx="64" cy="76" rx="10" ry="6"/>
+      <ellipse cx="64" cy="148" rx="10" ry="6"/>
+      <ellipse cx="64" cy="220" rx="10" ry="6"/>
+      <ellipse cx="64" cy="292" rx="10" ry="6"/>
+      <ellipse cx="64" cy="364" rx="10" ry="6"/>
+      <ellipse cx="64" cy="436" rx="10" ry="6"/>
+    </g>
+    <g stroke="#ffffff" stroke-width="3.5" opacity="0.6">
+      <line x1="320" y1="126" x2="240" y2="196"/>
+      <line x1="320" y1="126" x2="400" y2="196"/>
+      <line x1="240" y1="196" x2="320" y2="286"/>
+      <line x1="400" y1="196" x2="320" y2="286"/>
+    </g>
+    <g class="nodes">
+      <circle cx="320" cy="126" r="30" fill="#ffffff"/>
+      <circle cx="320" cy="126" r="38" stroke="#ffffff" stroke-width="2" fill="none" opacity="0.5"/>
+      <circle cx="240" cy="196" r="24" fill="#ffffff"/>
+      <circle cx="240" cy="196" r="32" stroke="#ffffff" stroke-width="2" fill="none" opacity="0.5"/>
+      <circle cx="400" cy="196" r="24" fill="#ffffff"/>
+      <circle cx="400" cy="196" r="32" stroke="#ffffff" stroke-width="2" fill="none" opacity="0.5"/>
+      <circle cx="320" cy="286" r="27" fill="#ffffff"/>
+      <circle cx="320" cy="286" r="35" stroke="#ffffff" stroke-width="2" fill="none" opacity="0.5"/>
+    </g>
+    <g stroke="#ffffff" stroke-width="4" stroke-linecap="round" opacity="0.4">
+      <line x1="192" y1="366" x2="448" y2="366"/>
+      <line x1="192" y1="394" x2="448" y2="394"/>
+      <line x1="240" y1="422" x2="400" y2="422"/>
+    </g>
+  </g>
+  <!-- Wordmark in Newsreader 700 (embedded woff2 subset; cap height 167.5px at 250px, baseline y=183.75 centers it in the 200 viewBox) -->
+  <text x="244" y="183.75" font-family="Newsreader, Georgia, 'Times New Roman', serif" font-size="250" font-weight="700">
+    <tspan fill="#f9fafb">Notebooker</tspan><tspan fill="#94a3b8">.ai</tspan>
+  </text>
+  <style>
+    @font-face {
+      font-family: 'Newsreader';
+      font-style: normal;
+      font-weight: 700;
+      src: url(data:font/woff2;base64,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) format('woff2');
+    }
+    @keyframes pulse {
+      0% { transform: scale(1); opacity: 0.8; }
+      50% { transform: scale(1.1); opacity: 1; }
+      100% { transform: scale(1); opacity: 0.8; }
+    }
+    .nodes circle {
+      animation: pulse 3s infinite ease-in-out;
+    }
+    .nodes circle:nth-child(2n) {
+      animation-delay: 1s;
+    }
+    .nodes circle:nth-child(3n) {
+      animation-delay: 2s;
+    }
+  </style>
+</svg>
