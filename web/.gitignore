@@ -1,0 +1,17 @@
+# build output
+dist/
+.astro/
+
+# dependencies
+node_modules/
+
+# local env / secrets
+.dev.vars
+.env
+.env.*
+
+# wrangler
+.wrangler/
+
+# logs
+npm-debug.log*

@@ -1,0 +1,86 @@
+---
+import '../styles/global.css';
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const {
+  title = 'Open Notebooker — deploy your own AI endpoint',
+  description = 'Deploy an OpenAI-compatible AI endpoint on your own Cloudflare account in one click. Try out your own AI with Notebooker.ai.',
+} = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300..700;1,6..72,300..700&family=Source+Sans+3:wght@400..700&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Prevent dark-mode flash. -->
+    <script is:inline>
+      if (
+        localStorage.getItem('darkMode') === 'true' ||
+        (!localStorage.getItem('darkMode') &&
+          window.matchMedia('(prefers-color-scheme: dark)').matches)
+      ) {
+        document.documentElement.classList.add('dark');
+      }
+    </script>
+  </head>
+  <body class="min-h-screen bg-paper text-ink dark:bg-night dark:text-ink-invert font-sans antialiased">
+    <header
+      class="sticky top-0 z-50 border-b border-line bg-paper/90 backdrop-blur-lg dark:border-line-dark dark:bg-night/90"
+    >
+      <div class="mx-auto flex max-w-[1180px] items-center justify-between px-4 py-3 sm:px-6">
+        <a href="/" class="flex items-center gap-2">
+          <img src="/logo-wordmark.svg" alt="Notebooker.ai" class="h-8 dark:hidden" />
+          <img src="/logo-wordmark-dark.svg" alt="Notebooker.ai" class="hidden h-8 dark:block" />
+          <span class="font-sans text-[13px] font-semibold uppercase tracking-wide text-ink-faint"
+            >Open</span
+          >
+        </a>
+        <button
+          id="theme-toggle"
+          class="rounded-[3px] border border-line px-3 py-1.5 text-[13px] font-semibold text-ink-soft transition-colors hover:border-accent hover:text-accent dark:border-line-dark dark:text-ink-softinvert"
+          aria-label="Toggle dark mode"
+        >
+          Theme
+        </button>
+      </div>
+    </header>
+
+    <main>
+      <slot />
+    </main>
+
+    <footer class="mt-24 border-t border-line dark:border-line-dark">
+      <div
+        class="mx-auto max-w-[1180px] px-4 py-8 text-[13px] text-ink-faint sm:px-6 dark:text-ink-softinvert"
+      >
+        Try out your own AI with <a
+          href="https://notebooker.ai"
+          class="text-accent hover:underline dark:text-accent-invert">Notebooker.ai</a
+        >. Your keys · your account · your data.
+      </div>
+    </footer>
+
+    <script is:inline>
+      document.getElementById('theme-toggle')?.addEventListener('click', () => {
+        const isDark = document.documentElement.classList.toggle('dark');
+        localStorage.setItem('darkMode', String(isDark));
+      });
+    </script>
+  </body>
+</html>
