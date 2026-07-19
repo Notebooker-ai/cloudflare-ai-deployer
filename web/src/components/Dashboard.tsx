@@ -85,7 +85,7 @@ export default function Dashboard() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-2xl font-bold">
-            {isOnboarding ? 'Deploy your endpoint' : 'Your AI endpoint'}
+            {isOnboarding ? 'Deploy your endpoint' : 'Your OpenAI Compatible AI endpoint'}
           </h2>
           {state.subdomain && (
             <p className="text-fg2">
