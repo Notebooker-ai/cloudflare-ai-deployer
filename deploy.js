@@ -91,7 +91,7 @@ async function main() {
         return;
     }
 
-    const baseUrl = `https://${workerName}.${ACCOUNT_ID}.workers.dev/v1`;
+    const baseUrl = `https://${workerName}.${await getWorkersSubdomain()}.workers.dev/v1`;
 
     console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     console.log('🌐 Your endpoint is live\n');
@@ -107,6 +107,18 @@ async function main() {
         console.log(`     curl ${baseUrl}/models -H "Authorization: Bearer ${apiKey}"`);
     }
     console.log('\n✨ Done!');
+}
+
+// The workers.dev host uses the account's registered subdomain, not the
+// account id. Fall back to the id only if the lookup fails.
+async function getWorkersSubdomain() {
+    try {
+        const res = await client.workers.subdomains.get({ account_id: ACCOUNT_ID });
+        if (res && res.subdomain) return res.subdomain;
+    } catch {
+        /* fall through */
+    }
+    return ACCOUNT_ID;
 }
 
 async function verifyToken() {

@@ -2,8 +2,11 @@
 
 An Astro app (deployed to **open.notebooker.ai**) that lets anyone stand up an
 OpenAI-compatible Workers AI endpoint on *their own* Cloudflare account — with
-live model management, API-key view/copy/cycle, in-browser chat + TTS testing,
-and an estimated free-neuron usage monitor.
+live model management, API-key renew/paste/copy plus a `credentials.txt`
+download, in-browser testers for chat (streaming), text-to-speech,
+speech-to-text (file upload), vision (image upload), and embeddings (semantic
+similarity), an estimated free-neuron usage monitor, and a WebTUI terminal UI
+with every published theme (default: catppuccin mocha).
 
 - **No login, no database.** A visitor pastes a scoped Cloudflare API token; it
   lives only in an AES-GCM-encrypted, expiring `HttpOnly` cookie. Every
