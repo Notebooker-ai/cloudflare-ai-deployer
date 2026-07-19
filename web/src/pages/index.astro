@@ -9,22 +9,20 @@ if (session) return Astro.redirect('/dashboard');
 ---
 
 <Base>
-  <section class="mx-auto max-w-[1180px] px-4 pt-16 pb-12 sm:px-6 md:pt-24">
-    <p class="mb-4 font-sans text-[13px] font-semibold uppercase tracking-wide text-ink-faint">
-      Open Notebooker
-    </p>
-    <h1 class="max-w-3xl font-serif text-5xl font-normal leading-[1.05] tracking-tight md:text-6xl">
+  <section class="mx-auto max-w-[110ch] px-4 pt-12 pb-10 sm:px-6 md:pt-20">
+    <p class="mb-3 text-fg2">~/open-notebooker <span class="text-accent">$</span> deploy --to=your-cloudflare</p>
+    <h1 class="max-w-3xl text-3xl leading-tight font-bold md:text-4xl">
       Deploy your own AI endpoint.<br />
-      <span class="text-accent dark:text-accent-invert">On your own Cloudflare.</span>
+      <span class="text-accent">On your own Cloudflare.</span>
     </h1>
-    <p class="mt-6 max-w-2xl font-sans text-lg text-ink-soft dark:text-ink-softinvert">
-      An OpenAI-compatible API backed by Cloudflare Workers AI — chat, speech, embeddings — deployed
-      to your account in one click. Pick your models, test it right here, copy your key. No signup,
-      no database, nothing stored on our side.
+    <p class="mt-5 max-w-2xl text-fg1">
+      An OpenAI-compatible API backed by Cloudflare Workers AI — chat, speech, vision, embeddings —
+      deployed to your account in one click. Pick your models, test it right here, copy your key.
+      No signup, no database, nothing stored on our side.
     </p>
   </section>
 
-  <section class="mx-auto max-w-[1180px] px-4 pb-20 sm:px-6">
+  <section class="mx-auto max-w-[110ch] px-4 pb-16 sm:px-6">
     <TokenGate client:load />
   </section>
 </Base>

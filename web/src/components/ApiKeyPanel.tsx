@@ -64,87 +64,87 @@ export default function ApiKeyPanel({ workerName, baseUrl, initialKey }: Props) 
   const masked = key ? key.slice(0, 6) + '•'.repeat(20) + key.slice(-4) : '';
 
   return (
-    <div className="card">
-      <div className="flex items-center justify-between">
-        <h3 className="font-serif text-xl font-medium">Endpoint &amp; API key</h3>
-        <span className="rounded-[3px] bg-paper-deep px-2 py-1 font-mono text-[12px] text-ink-soft dark:bg-night-deep dark:text-ink-softinvert">
+    <div box-="square" shear-="top" className="min-w-0">
+      <div className="-mt-[0.5lh] flex items-center justify-between">
+        <span is-="badge" variant-="foreground0">
+          endpoint
+        </span>
+        <span is-="badge" variant-="background2">
           {workerName}
         </span>
       </div>
 
-      <label className="label mt-5 mb-2">Base URL</label>
+      <label className="mt-4 mb-1 block text-fg2">base_url:</label>
       <div className="flex items-center gap-2">
-        <code className="field overflow-x-auto whitespace-nowrap font-mono text-[13px]">
+        <code className="block min-w-0 flex-1 overflow-x-auto bg-bg1 px-2 py-1 whitespace-nowrap">
           {baseUrl}
         </code>
-        <button className="btn btn-outline btn-sm shrink-0" onClick={() => copy(baseUrl, 'url')}>
-          {copied === 'url' ? 'Copied' : 'Copy'}
+        <button size-="small" box-="square" className="shrink-0" onClick={() => copy(baseUrl, 'url')}>
+          {copied === 'url' ? '[copied]' : '[copy]'}
         </button>
       </div>
 
-      <label className="label mt-5 mb-2">Bearer API key</label>
+      <label className="mt-4 mb-1 block text-fg2">bearer_api_key:</label>
       {!loaded ? (
-        <p className="text-[13px] text-ink-faint">Checking this session…</p>
+        <p className="text-fg2">
+          checking this session<span is-="spinner" variant-="dots"></span>
+        </p>
       ) : key ? (
         <>
           <div className="flex items-center gap-2">
-            <code className="field overflow-x-auto whitespace-nowrap font-mono text-[13px]">
+            <code className="block min-w-0 flex-1 overflow-x-auto bg-bg1 px-2 py-1 whitespace-nowrap">
               {revealed ? key : masked}
             </code>
             <button
-              className="btn btn-outline btn-sm shrink-0"
+              size-="small"
+              box-="square"
+              className="shrink-0"
               onClick={() => setRevealed((r) => !r)}
             >
-              {revealed ? 'Hide' : 'Reveal'}
+              {revealed ? '[hide]' : '[reveal]'}
             </button>
-            <button className="btn btn-outline btn-sm shrink-0" onClick={() => copy(key, 'key')}>
-              {copied === 'key' ? 'Copied' : 'Copy'}
+            <button size-="small" box-="square" className="shrink-0" onClick={() => copy(key, 'key')}>
+              {copied === 'key' ? '[copied]' : '[copy]'}
             </button>
           </div>
-          <p className="mt-2 text-[12px] text-ink-faint">
+          <p className="mt-2 text-sm text-fg2">
             Copy it now — we never store this key. It's visible only for this browser session;
             after that, renewing is the only way to see a key here again.
           </p>
         </>
       ) : (
-        <div className="rounded-[3px] border border-line bg-paper-deep p-3 text-[13px] text-ink-soft dark:border-line-dark dark:bg-night-deep dark:text-ink-softinvert">
+        <div box-="square" className="text-fg1">
           Your endpoint key isn't viewable — keys are never stored, and this session didn't
           generate one. Your existing key keeps working for API clients that already have it; to
-          see one here again, renew it below (this <span className="font-semibold">replaces</span>{' '}
-          the old key).
+          see one here again, renew it below (this <span className="font-bold">replaces</span> the
+          old key).
         </div>
       )}
 
-      <div className="mt-5 border-t border-line pt-4 dark:border-line-dark">
+      <div className="mt-4 border-t-2 border-bg2 pt-3">
         {!confirming ? (
-          <button className="btn btn-outline btn-sm" onClick={() => setConfirming(true)}>
-            {key ? 'Renew key…' : 'Renew key to view…'}
+          <button size-="small" box-="square" onClick={() => setConfirming(true)}>
+            {key ? '[renew key…]' : '[renew key to view…]'}
           </button>
         ) : (
-          <div className="rounded-[3px] border border-accent/40 bg-accent-soft/30 p-3 dark:bg-accent-softinvert/20">
-            <p className="text-[13px] text-ink-soft dark:text-ink-softinvert">
+          <div box-="square">
+            <p className="text-fg1">
               Renewing replaces the key immediately. Any client using the old key will get{' '}
-              <span className="font-semibold">401</span> once it propagates. Continue?
+              <span className="font-bold text-danger">401</span> once it propagates. Continue?
             </p>
-            <div className="mt-3 flex gap-2">
-              <button className="btn btn-primary btn-sm" onClick={cycle} disabled={cycling}>
-                {cycling ? 'Renewing…' : 'Yes, renew now'}
+            <div className="mt-2 flex gap-2">
+              <button size-="small" onClick={cycle} disabled={cycling}>
+                {cycling ? 'renewing…' : 'yes, renew now'}
               </button>
-              <button
-                className="btn btn-outline btn-sm"
-                onClick={() => setConfirming(false)}
-                disabled={cycling}
-              >
-                Cancel
+              <button size-="small" box-="square" onClick={() => setConfirming(false)} disabled={cycling}>
+                [cancel]
               </button>
             </div>
           </div>
         )}
       </div>
 
-      {error && (
-        <p className="mt-3 text-[13px] font-semibold text-red-700 dark:text-red-400">{error}</p>
-      )}
+      {error && <p className="mt-3 font-bold text-danger">! {error}</p>}
     </div>
   );
 }

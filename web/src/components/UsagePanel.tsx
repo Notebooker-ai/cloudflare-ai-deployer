@@ -10,6 +10,8 @@ interface Usage {
   estimated: boolean;
 }
 
+const BAR_WIDTH = 30;
+
 export default function UsagePanel() {
   const [usage, setUsage] = useState<Usage | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -36,58 +38,56 @@ export default function UsagePanel() {
 
   const pct = usage ? Math.min(100, usage.percentOfFreeUsed) : 0;
   const over = pct >= 90;
+  const filled = Math.round((pct / 100) * BAR_WIDTH);
+  const bar = '█'.repeat(filled) + '░'.repeat(BAR_WIDTH - filled);
 
   return (
-    <div className="card">
-      <div className="flex items-center justify-between">
-        <h3 className="font-serif text-xl font-medium">Free neuron usage</h3>
-        <button className="btn btn-outline btn-sm" onClick={load} disabled={loading}>
-          {loading ? '…' : 'Refresh'}
+    <div box-="square" shear-="top" className="min-w-0">
+      <div className="-mt-[0.5lh] flex items-center justify-between">
+        <span is-="badge" variant-="foreground0">
+          neurons
+        </span>
+        <button size-="small" box-="square" onClick={load} disabled={loading}>
+          {loading ? '[…]' : '[refresh]'}
         </button>
       </div>
-      <p className="mt-1 text-[12px] text-ink-faint">Estimated · today (UTC) · resets 00:00 UTC</p>
+      <p className="mt-3 text-sm text-fg2">estimated · today (UTC) · resets 00:00 UTC</p>
 
-      {error && (
-        <p className="mt-3 text-[13px] font-semibold text-red-700 dark:text-red-400">{error}</p>
-      )}
+      {error && <p className="mt-3 font-bold text-danger">! {error}</p>}
 
       {usage && (
         <>
-          <div className="mt-4">
-            <div className="flex items-baseline justify-between">
-              <span className="font-serif text-3xl font-medium">
+          <div className="mt-3">
+            <div className="flex flex-wrap items-baseline justify-between gap-2">
+              <span className="text-xl font-bold">
                 {usage.estimatedNeuronsToday.toLocaleString()}
               </span>
-              <span className="text-[13px] text-ink-faint">
-                / {usage.freeDailyNeurons.toLocaleString()} neurons
-              </span>
+              <span className="text-fg2">/ {usage.freeDailyNeurons.toLocaleString()} free</span>
             </div>
-            <div className="mt-2 h-2.5 w-full overflow-hidden rounded-full bg-paper-deep dark:bg-night-deep">
-              <div
-                className={
-                  'h-full rounded-full transition-all ' +
-                  (over ? 'bg-red-600' : 'bg-accent dark:bg-accent-invert')
-                }
-                style={{ width: `${pct}%` }}
-              />
-            </div>
+            <p
+              className={
+                'mt-1 overflow-hidden font-bold whitespace-nowrap ' +
+                (over ? 'text-danger' : 'text-accent')
+              }
+            >
+              [{bar}] {pct.toFixed(0)}%
+            </p>
             {over && (
-              <p className="mt-2 text-[13px] font-semibold text-red-700 dark:text-red-400">
-                Approaching the free daily limit — usage beyond this bills on your Cloudflare account.
+              <p className="mt-1 font-bold text-danger">
+                ! approaching the free daily limit — usage beyond this bills on your account
               </p>
             )}
           </div>
 
-          <div className="mt-5 grid grid-cols-3 gap-3 text-center">
-            <Stat label="Requests" value={usage.totalRequests} />
-            <Stat label="Input tokens" value={usage.totalInputTokens} />
-            <Stat label="Output tokens" value={usage.totalOutputTokens} />
+          <div className="mt-4 grid grid-cols-3 gap-2 text-center">
+            <Stat label="requests" value={usage.totalRequests} />
+            <Stat label="tok_in" value={usage.totalInputTokens} />
+            <Stat label="tok_out" value={usage.totalOutputTokens} />
           </div>
-          <p className="mt-4 text-[12px] text-ink-faint">
-            Estimated from request/token analytics (Cloudflare exposes no direct neuron figure). See
-            the authoritative number in your{' '}
+          <p className="mt-3 text-sm text-fg2">
+            Estimated from request/token analytics (Cloudflare exposes no direct neuron figure).
+            Authoritative number:{' '}
             <a
-              className="text-accent hover:underline dark:text-accent-invert"
               href="https://dash.cloudflare.com/?to=/:account/ai/workers-ai"
               target="_blank"
               rel="noreferrer"
@@ -104,9 +104,9 @@ export default function UsagePanel() {
 
 function Stat({ label, value }: { label: string; value: number }) {
   return (
-    <div className="rounded-[3px] border border-line bg-paper-deep p-3 dark:border-line-dark dark:bg-night-deep">
-      <div className="font-serif text-xl font-medium">{value.toLocaleString()}</div>
-      <div className="text-[12px] text-ink-faint">{label}</div>
+    <div className="bg-bg1 p-2">
+      <div className="font-bold">{value.toLocaleString()}</div>
+      <div className="text-sm text-fg2">{label}</div>
     </div>
   );
 }

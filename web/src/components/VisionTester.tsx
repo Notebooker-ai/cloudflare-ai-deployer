@@ -55,50 +55,50 @@ export default function VisionTester({
   }
 
   return (
-    <div className="card flex flex-col">
-      <h3 className="font-serif text-xl font-medium">Vision</h3>
-      <p className="mt-1 text-[13px] text-ink-faint">
-        Ask questions about an image. Images only — Workers AI vision models don’t read PDFs.
+    <div box-="square" shear-="top" className="flex min-w-0 flex-col">
+      <div className="-mt-[0.5lh]">
+        <span is-="badge" variant-="background2">
+          vision
+        </span>
+      </div>
+      <p className="mt-3 text-sm text-fg2">
+        Ask questions about an image. Images only — Workers AI vision models don't read PDFs.
       </p>
       {!visionReady && (
-        <div className="mt-3 rounded-[3px] border border-accent/40 bg-accent-soft/30 p-3 text-[13px] dark:bg-accent-softinvert/20">
-          Your current chat model{chatModel ? ` (${chatModel})` : ''} doesn’t appear to support
-          images. Pick a vision-capable one — e.g.{' '}
-          <span className="font-mono text-[12px]">@cf/meta/llama-3.2-11b-vision-instruct</span> or{' '}
-          <span className="font-mono text-[12px]">@cf/meta/llama-4-scout-17b-16e-instruct</span> —
-          then save &amp; redeploy.
+        <div box-="square" className="mt-3 text-sm text-fg1">
+          ! Your current chat model{chatModel ? ` (${chatModel})` : ''} doesn't appear to support
+          images. Pick a vision-capable one — e.g. @cf/meta/llama-3.2-11b-vision-instruct or
+          @cf/meta/llama-4-scout-17b-16e-instruct — then save &amp; redeploy.
         </div>
       )}
       <input
         type="file"
         accept="image/*"
-        className="field mt-4 file:mr-3 file:rounded-[3px] file:border-0 file:bg-ink file:px-3 file:py-1.5 file:font-sans file:text-[13px] file:font-semibold file:text-paper dark:file:bg-ink-invert dark:file:text-night"
+        className="mt-3"
         onChange={(e) => pick(e.target.files?.[0] ?? null)}
       />
       {preview && (
         <img
           src={preview}
           alt="preview"
-          className="mt-3 max-h-48 w-auto self-start rounded-[3px] border border-line dark:border-line-dark"
+          className="mt-3 max-h-48 w-auto self-start border-2 border-bg2"
         />
       )}
       <input
-        className="field mt-3"
+        className="mt-3 w-full"
         value={prompt}
         onChange={(e) => setPrompt(e.target.value)}
-        placeholder="What do you want to know about it?"
+        placeholder="what do you want to know about it?"
       />
-      {error && (
-        <p className="mt-2 text-[13px] font-semibold text-red-700 dark:text-red-400">{error}</p>
-      )}
+      {error && <p className="mt-2 font-bold text-danger">! {error}</p>}
       {answer !== null && (
-        <div className="mt-3 whitespace-pre-wrap rounded-[3px] border border-line bg-paper-deep p-3 text-[14px] dark:border-line-dark dark:bg-night-deep">
-          {answer || <span className="text-ink-faint">(empty answer)</span>}
+        <div className="mt-3 bg-bg1 p-2 whitespace-pre-wrap text-fg1">
+          {answer || <span className="text-fg2">(empty answer)</span>}
         </div>
       )}
       <div className="mt-3">
-        <button className="btn btn-primary btn-md" onClick={ask} disabled={loading || !file}>
-          {loading ? 'Asking…' : 'Ask'}
+        <button size-="small" onClick={ask} disabled={loading || !file}>
+          {loading ? 'asking…' : 'ask'}
         </button>
       </div>
     </div>

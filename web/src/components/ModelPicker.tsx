@@ -45,32 +45,39 @@ export default function ModelPicker({ value, onChange }: Props) {
   }
 
   if (error) {
-    return <p className="text-[14px] font-semibold text-red-700 dark:text-red-400">{error}</p>;
+    return <p className="font-bold text-danger">! {error}</p>;
   }
   if (!groups) {
-    return <p className="text-[14px] text-ink-faint">Loading model catalog…</p>;
+    return (
+      <p className="text-fg2">
+        loading model catalog<span is-="spinner" variant-="dots"></span>
+      </p>
+    );
   }
 
   return (
-    <div className="grid gap-5 sm:grid-cols-2">
-      {groups.map((g) => (
-        <div key={g.key}>
-          <label className="label mb-2">{g.label}</label>
-          <select
-            className="field"
-            value={value[g.key] ?? ''}
-            onChange={(e) => set(g.key, e.target.value)}
-          >
-            <option value="">— none —</option>
-            {g.models.map((m) => (
-              <option key={m.id} value={m.id}>
-                {m.id}
-              </option>
-            ))}
-          </select>
-          <p className="mt-1 text-[12px] text-ink-faint">{g.models.length} available</p>
-        </div>
-      ))}
+    <div className="grid gap-4 sm:grid-cols-2">
+      {groups.map((g) => {
+        const current = value[g.key] ?? '';
+        // Keep a configured-but-unlisted model selectable (e.g. ids that the
+        // catalog search omits) instead of silently dropping it to "none".
+        const unlisted = current && !g.models.some((m) => m.id === current);
+        return (
+          <div key={g.key} className="min-w-0">
+            <label className="mb-1 block text-fg2">{g.label.toLowerCase()}:</label>
+            <select value={current} onChange={(e) => set(g.key, e.target.value)}>
+              <option value="">— none —</option>
+              {unlisted && <option value={current}>{current} (current)</option>}
+              {g.models.map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.id}
+                </option>
+              ))}
+            </select>
+            <p className="mt-1 text-sm text-fg2">{g.models.length} available · live from cloudflare</p>
+          </div>
+        );
+      })}
     </div>
   );
 }

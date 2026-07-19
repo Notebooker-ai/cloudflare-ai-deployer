@@ -31,20 +31,23 @@ export default function TtsTester({ workerName }: { workerName: string }) {
   }
 
   return (
-    <div className="card flex flex-col">
-      <h3 className="font-serif text-xl font-medium">Text to speech</h3>
+    <div box-="square" shear-="top" className="flex min-w-0 flex-col">
+      <div className="-mt-[0.5lh]">
+        <span is-="badge" variant-="background2">
+          text-to-speech
+        </span>
+      </div>
       <textarea
-        className="field mt-4 h-28 resize-none"
+        className="mt-3 h-24 w-full p-2"
+        size-="small"
         value={text}
         onChange={(e) => setText(e.target.value)}
-        placeholder="Text to synthesize…"
+        placeholder="text to synthesize…"
       />
-      {error && (
-        <p className="mt-2 text-[13px] font-semibold text-red-700 dark:text-red-400">{error}</p>
-      )}
-      <div className="mt-3 flex items-center gap-3">
-        <button className="btn btn-primary btn-md" onClick={speak} disabled={loading || !text.trim()}>
-          {loading ? 'Generating…' : 'Generate audio'}
+      {error && <p className="mt-2 font-bold text-danger">! {error}</p>}
+      <div className="mt-3 flex flex-wrap items-center gap-3">
+        <button size-="small" onClick={speak} disabled={loading || !text.trim()}>
+          {loading ? 'generating…' : 'generate audio'}
         </button>
         {audioUrl && <audio controls src={audioUrl} className="max-w-full" />}
       </div>

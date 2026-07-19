@@ -61,35 +61,39 @@ export default function Dashboard() {
 
   if (error) {
     return (
-      <div className="card">
-        <p className="font-semibold text-red-700 dark:text-red-400">{error}</p>
-        <button className="btn btn-outline btn-sm mt-3" onClick={refresh}>
-          Retry
+      <div box-="square">
+        <p className="font-bold text-danger">! {error}</p>
+        <button size-="small" box-="square" className="mt-3" onClick={refresh}>
+          [retry]
         </button>
       </div>
     );
   }
   if (!state) {
-    return <p className="text-ink-faint">Loading your account…</p>;
+    return (
+      <p className="text-fg2">
+        loading your account<span is-="spinner" variant-="dots"></span>
+      </p>
+    );
   }
 
   const isOnboarding = state.kind === 'first-visit' || state.kind === 'worker-missing';
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="font-serif text-3xl font-medium">
+          <h2 className="text-2xl font-bold">
             {isOnboarding ? 'Deploy your endpoint' : 'Your AI endpoint'}
           </h2>
           {state.subdomain && (
-            <p className="text-[13px] text-ink-faint">
-              Account subdomain: <span className="font-mono">{state.subdomain}.workers.dev</span>
+            <p className="text-fg2">
+              account subdomain: <span className="text-fg1">{state.subdomain}.workers.dev</span>
             </p>
           )}
         </div>
-        <button className="btn btn-outline btn-sm" onClick={logout}>
-          Sign out
+        <button size-="small" box-="square" onClick={logout}>
+          [sign out]
         </button>
       </div>
 
@@ -128,19 +132,23 @@ function Onboarding({ state, onDeployed }: { state: DashboardState; onDeployed: 
   }
 
   return (
-    <div className="card card-featured">
+    <div box-="double" shear-="top">
+      <div className="-mt-[0.5lh]">
+        <span is-="badge" variant-="foreground0">
+          deploy
+        </span>
+      </div>
       {state.kind === 'worker-missing' && (
-        <div className="mb-4 rounded-[3px] border border-accent/40 bg-accent-soft/30 p-3 text-[13px] dark:bg-accent-softinvert/20">
+        <div box-="square" className="mt-3 text-fg1">
           We found saved config but the worker is gone. Redeploy to bring it back.
         </div>
       )}
       {!state.subdomain && (
-        <div className="mb-4 rounded-[3px] border border-red-400 bg-red-50 p-3 text-[13px] dark:border-red-700 dark:bg-red-950/40">
-          <p className="font-semibold">Your account has no workers.dev subdomain yet.</p>
-          <p className="mt-1">
+        <div box-="square" className="mt-3">
+          <p className="font-bold text-danger">! no workers.dev subdomain on this account</p>
+          <p className="mt-1 text-fg1">
             Deploys will fail until it exists. Open{' '}
             <a
-              className="font-semibold text-accent hover:underline dark:text-accent-invert"
               href="https://dash.cloudflare.com/?to=/:account/workers-and-pages"
               target="_blank"
               rel="noreferrer"
@@ -148,32 +156,30 @@ function Onboarding({ state, onDeployed }: { state: DashboardState; onDeployed: 
               Workers &amp; Pages in your Cloudflare dashboard
             </a>{' '}
             once and register your subdomain (it will prompt you the first time). Also make sure
-            your Cloudflare account email is verified — unverified accounts can’t deploy Workers.
-            Then come back and hit Deploy.
+            your Cloudflare account email is verified — unverified accounts can't deploy Workers.
+            Then come back and hit deploy.
           </p>
         </div>
       )}
-      <label className="label mb-2">Worker name</label>
+      <label className="mt-4 mb-1 block text-fg2">worker_name:</label>
       <input
-        className="field font-mono"
+        className="w-full"
         value={workerName}
         onChange={(e) => setWorkerName(e.target.value)}
         placeholder="cloudflare-ai"
       />
-      <p className="mt-1 text-[12px] text-ink-faint">
-        Becomes <span className="font-mono">{workerName || 'cloudflare-ai'}.{state.subdomain ?? '<subdomain>'}.workers.dev</span>
+      <p className="mt-1 text-sm text-fg2">
+        → {workerName || 'cloudflare-ai'}.{state.subdomain ?? '<subdomain>'}.workers.dev
       </p>
 
-      <div className="mt-6">
-        <label className="label mb-3">Choose your models</label>
+      <div className="mt-5">
+        <label className="mb-2 block text-fg2">models:</label>
         <ModelPicker value={models} onChange={setModels} />
       </div>
 
-      {error && (
-        <p className="mt-4 text-[14px] font-semibold text-red-700 dark:text-red-400">{error}</p>
-      )}
-      <button className="btn btn-primary btn-lg mt-6" onClick={deploy} disabled={deploying}>
-        {deploying ? 'Deploying…' : 'Deploy to my Cloudflare'}
+      {error && <p className="mt-4 font-bold text-danger">! {error}</p>}
+      <button className="mt-5 w-full" onClick={deploy} disabled={deploying}>
+        {deploying ? 'deploying…' : 'deploy to my cloudflare'}
       </button>
     </div>
   );
@@ -216,11 +222,9 @@ function Manage({ state }: { state: DashboardState }) {
   return (
     <div className="space-y-6">
       {state.kind === 'drift' && (
-        <div className="card border-accent dark:border-accent-invert">
-          <p className="text-[14px]">
-            The live worker's models differ from your saved config. Saving below will redeploy from
-            what's selected.
-          </p>
+        <div box-="square" className="text-fg1">
+          ! The live worker's models differ from your saved config. Saving below will redeploy
+          from what's selected.
         </div>
       )}
 
@@ -229,23 +233,19 @@ function Manage({ state }: { state: DashboardState }) {
         <UsagePanel />
       </div>
 
-      <div className="card">
-        <div className="flex items-center justify-between">
-          <h3 className="font-serif text-xl font-medium">Models</h3>
-          <button
-            className="btn btn-primary btn-sm"
-            onClick={save}
-            disabled={!dirty || saving}
-          >
-            {saving ? 'Redeploying…' : dirty ? 'Save & redeploy' : 'Saved'}
+      <div box-="square" shear-="top">
+        <div className="-mt-[0.5lh] flex items-center justify-between">
+          <span is-="badge" variant-="background2">
+            models
+          </span>
+          <button size-="small" box-="square" onClick={save} disabled={!dirty || saving}>
+            {saving ? '[redeploying…]' : dirty ? '[save & redeploy]' : '[saved]'}
           </button>
         </div>
         <div className="mt-4">
           <ModelPicker value={models} onChange={setModels} />
         </div>
-        {error && (
-          <p className="mt-3 text-[13px] font-semibold text-red-700 dark:text-red-400">{error}</p>
-        )}
+        {error && <p className="mt-3 font-bold text-danger">! {error}</p>}
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">

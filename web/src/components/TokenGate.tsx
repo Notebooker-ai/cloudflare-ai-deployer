@@ -26,46 +26,47 @@ export default function TokenGate() {
   }
 
   return (
-    <div className="grid gap-8 md:grid-cols-[1fr_0.9fr]">
-      <form onSubmit={submit} className="card card-featured">
-        <h2 className="font-serif text-2xl font-medium">Authenticate this visit</h2>
-        <p className="mt-2 text-[15px] text-ink-soft dark:text-ink-softinvert">
+    <div className="grid gap-6 md:grid-cols-[1fr_0.9fr]">
+      <form onSubmit={submit} box-="double" shear-="top" className="min-w-0">
+        <div className="-mt-[0.5lh]">
+          <span is-="badge" variant-="foreground0">
+            auth
+          </span>
+        </div>
+        <h2 className="mt-3 font-bold">Authenticate this visit</h2>
+        <p className="mt-2 text-fg1">
           Paste a scoped Cloudflare API token. We hold it only in an encrypted, expiring cookie —
           never in a database.
         </p>
-        <label className="label mt-6 mb-2">Cloudflare API token</label>
+        <label className="mt-5 mb-1 block text-fg2">cloudflare_api_token:</label>
         <input
           type="password"
-          className="field font-mono"
+          className="w-full"
           placeholder="paste your scoped token"
           value={token}
           onChange={(e) => setToken(e.target.value)}
           autoComplete="off"
           spellCheck={false}
         />
-        {error && (
-          <p className="mt-3 text-[14px] font-semibold text-red-700 dark:text-red-400">{error}</p>
-        )}
-        <button
-          type="submit"
-          className="btn btn-primary btn-lg mt-6 w-full"
-          disabled={loading || !token.trim()}
-        >
-          {loading ? 'Verifying…' : 'Continue'}
+        {error && <p className="mt-3 font-bold text-danger">! {error}</p>}
+        <button type="submit" className="mt-5 w-full" disabled={loading || !token.trim()}>
+          {loading ? 'verifying…' : 'continue'}
         </button>
         <button
           type="button"
-          className="mt-3 text-[13px] font-semibold text-accent hover:underline dark:text-accent-invert"
+          size-="small"
+          box-="square"
+          className="mt-3"
           onClick={() => setShowGuide((s) => !s)}
         >
-          {showGuide ? 'Hide' : 'How do I create a token?'}
+          {showGuide ? '[- hide]' : '[? how do I create a token]'}
         </button>
-        <div className="mt-5 border-t border-line pt-4 text-[12px] text-ink-faint dark:border-line-dark">
+        <div className="mt-5 border-t-2 border-bg2 pt-3 text-sm text-fg2">
           <p>
-            <span className="font-semibold">We never save your Cloudflare token</span> — it lives
-            only in an encrypted cookie that expires with your session. For best security, delete
-            the token in your Cloudflare dashboard when you're done here; creating a new one later
-            lets you view this dashboard again.
+            <span className="font-bold text-fg1">We never save your Cloudflare token</span> — it
+            lives only in an encrypted cookie that expires with your session. For best security,
+            delete the token in your Cloudflare dashboard when you're done here; creating a new one
+            later lets you view this dashboard again.
           </p>
           <p className="mt-2">
             Your endpoint's API key is never saved either — it's shown only when created or
@@ -75,57 +76,54 @@ export default function TokenGate() {
         </div>
       </form>
 
-      <div className="card">
-        <h3 className="font-serif text-xl font-medium">Before you start</h3>
-        <ol className="mt-3 list-decimal space-y-2 pl-5 text-[14px] text-ink-soft dark:text-ink-softinvert">
+      <div box-="square" shear-="top" className="min-w-0">
+        <div className="-mt-[0.5lh]">
+          <span is-="badge" variant-="background2">
+            setup
+          </span>
+        </div>
+        <h3 className="mt-3 font-bold">Before you start</h3>
+        <ol className="mt-2 text-fg1">
           <li>
-            <span className="font-semibold text-ink dark:text-ink-invert">Verify your email</span>{' '}
-            with Cloudflare — unverified accounts can’t deploy Workers.
+            <span className="font-bold text-fg0">Verify your email</span> with Cloudflare —
+            unverified accounts can't deploy Workers.
           </li>
           <li>
             Visit{' '}
             <a
-              className="text-accent hover:underline dark:text-accent-invert"
               href="https://dash.cloudflare.com/?to=/:account/ai/workers-ai"
               target="_blank"
               rel="noreferrer"
             >
               Workers AI in your dashboard
             </a>{' '}
-            once, and register your{' '}
-            <span className="font-mono text-[13px]">workers.dev</span> subdomain when prompted
-            (Workers &amp; Pages does this on first visit).
+            once, and register your workers.dev subdomain when prompted.
           </li>
           <li>Create the API token below and paste it here.</li>
         </ol>
 
-        <h3 className="mt-6 font-serif text-xl font-medium">What the token needs</h3>
-        <p className="mt-2 text-[14px] text-ink-soft dark:text-ink-softinvert">
-          Create a <span className="font-semibold">Custom Token</span> scoped to a single account
-          with these permissions:
+        <h3 className="mt-5 font-bold">What the token needs</h3>
+        <p className="mt-1 text-fg1">
+          Create a <span className="font-bold">Custom Token</span> scoped to a single account:
         </p>
-        <ul className="mt-4 space-y-2 text-[14px]">
+        <ul marker-="tree" className="mt-2">
           {[
             ['Workers Scripts', 'Edit'],
             ['Workers KV Storage', 'Edit'],
             ['Workers AI', 'Read'],
             ['Account Analytics', 'Read'],
           ].map(([perm, level]) => (
-            <li key={perm} className="flex items-center justify-between border-b border-line pb-2 dark:border-line-dark">
-              <span>{perm}</span>
-              <span className="font-mono text-[12px] font-semibold text-accent dark:text-accent-invert">
-                {level}
-              </span>
+            <li key={perm}>
+              {perm} <span className="text-accent">→ {level}</span>
             </li>
           ))}
         </ul>
         {showGuide && (
-          <div className="mt-4 text-[13px] text-ink-soft dark:text-ink-softinvert">
-            <ol className="list-decimal space-y-1 pl-4">
+          <div className="mt-4 text-sm text-fg1">
+            <ol>
               <li>
                 Open{' '}
                 <a
-                  className="text-accent hover:underline dark:text-accent-invert"
                   href="https://dash.cloudflare.com/profile/api-tokens"
                   target="_blank"
                   rel="noreferrer"

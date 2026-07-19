@@ -1,11 +1,10 @@
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 
 export default function SttTester({ workerName }: { workerName: string }) {
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [text, setText] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
 
   async function transcribe() {
     if (!file) return;
@@ -28,37 +27,34 @@ export default function SttTester({ workerName }: { workerName: string }) {
   }
 
   return (
-    <div className="card flex flex-col">
-      <h3 className="font-serif text-xl font-medium">Speech to text</h3>
-      <p className="mt-1 text-[13px] text-ink-faint">
+    <div box-="square" shear-="top" className="flex min-w-0 flex-col">
+      <div className="-mt-[0.5lh]">
+        <span is-="badge" variant-="background2">
+          speech-to-text
+        </span>
+      </div>
+      <p className="mt-3 text-sm text-fg2">
         Upload audio (or video with an audio track) and transcribe it.
       </p>
       <input
-        ref={inputRef}
         type="file"
         accept="audio/*,video/*"
-        className="field mt-4 file:mr-3 file:rounded-[3px] file:border-0 file:bg-ink file:px-3 file:py-1.5 file:font-sans file:text-[13px] file:font-semibold file:text-paper dark:file:bg-ink-invert dark:file:text-night"
+        className="mt-3"
         onChange={(e) => {
           setFile(e.target.files?.[0] ?? null);
           setText(null);
           setError(null);
         }}
       />
-      {error && (
-        <p className="mt-2 text-[13px] font-semibold text-red-700 dark:text-red-400">{error}</p>
-      )}
+      {error && <p className="mt-2 font-bold text-danger">! {error}</p>}
       {text !== null && (
-        <div className="mt-3 rounded-[3px] border border-line bg-paper-deep p-3 text-[14px] dark:border-line-dark dark:bg-night-deep">
-          {text || <span className="text-ink-faint">(no speech detected)</span>}
+        <div className="mt-3 bg-bg1 p-2 text-fg1">
+          {text || <span className="text-fg2">(no speech detected)</span>}
         </div>
       )}
       <div className="mt-3">
-        <button
-          className="btn btn-primary btn-md"
-          onClick={transcribe}
-          disabled={loading || !file}
-        >
-          {loading ? 'Transcribing…' : 'Transcribe'}
+        <button size-="small" onClick={transcribe} disabled={loading || !file}>
+          {loading ? 'transcribing…' : 'transcribe'}
         </button>
       </div>
     </div>

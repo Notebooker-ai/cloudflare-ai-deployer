@@ -83,48 +83,49 @@ export default function ChatTester({ workerName }: { workerName: string }) {
   }
 
   return (
-    <div className="card flex flex-col">
-      <h3 className="font-serif text-xl font-medium">Chat</h3>
-      <div
-        ref={scrollRef}
-        className="mt-4 h-72 overflow-y-auto rounded-[3px] border border-line bg-paper-deep p-3 dark:border-line-dark dark:bg-night-deep"
-      >
+    <div box-="square" shear-="top" className="flex min-w-0 flex-col">
+      <div className="-mt-[0.5lh]">
+        <span is-="badge" variant-="background2">
+          chat
+        </span>
+      </div>
+      <div ref={scrollRef} className="mt-3 h-72 overflow-y-auto bg-bg1 p-2">
         {messages.length === 0 ? (
-          <p className="text-[14px] text-ink-faint">
-            Say hello to your endpoint — responses stream in live.
-          </p>
+          <p className="text-fg2">Say hello to your endpoint — responses stream in live.</p>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-2">
             {messages.map((m, i) => (
-              <div key={i} className={m.role === 'user' ? 'text-right' : 'text-left'}>
-                <span
-                  className={
-                    'inline-block max-w-[85%] whitespace-pre-wrap rounded-[6px] px-3 py-2 text-[14px] ' +
-                    (m.role === 'user'
-                      ? 'bg-ink text-paper dark:bg-ink-invert dark:text-night'
-                      : 'bg-paper-card text-ink dark:bg-night-card dark:text-ink-invert')
-                  }
-                >
-                  {m.content || (streaming ? '…' : '')}
-                </span>
+              <div key={i} className="whitespace-pre-wrap">
+                {m.role === 'user' ? (
+                  <>
+                    <span className="font-bold text-accent">you&gt;</span>{' '}
+                    <span className="font-bold">{m.content}</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="text-fg2">ai&gt;</span>{' '}
+                    <span className="text-fg1">
+                      {m.content}
+                      {!m.content && streaming && <span is-="spinner" variant-="dots"></span>}
+                    </span>
+                  </>
+                )}
               </div>
             ))}
           </div>
         )}
       </div>
-      {error && (
-        <p className="mt-2 text-[13px] font-semibold text-red-700 dark:text-red-400">{error}</p>
-      )}
+      {error && <p className="mt-2 font-bold text-danger">! {error}</p>}
       <form onSubmit={send} className="mt-3 flex gap-2">
         <input
-          className="field"
-          placeholder="Type a message…"
+          className="min-w-0 flex-1"
+          placeholder="type a message…"
           value={input}
           onChange={(e) => setInput(e.target.value)}
           disabled={streaming}
         />
-        <button className="btn btn-primary btn-md shrink-0" disabled={streaming || !input.trim()}>
-          {streaming ? '…' : 'Send'}
+        <button size-="small" className="shrink-0 self-center" disabled={streaming || !input.trim()}>
+          {streaming ? '…' : 'send'}
         </button>
       </form>
     </div>
