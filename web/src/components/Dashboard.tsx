@@ -238,8 +238,8 @@ function Manage({ state }: { state: DashboardState }) {
           <span is-="badge" variant-="background2">
             models
           </span>
-          <button size-="small" variant-="background2" onClick={save} disabled={!dirty || saving}>
-            {saving ? '[redeploying…]' : dirty ? '[save & redeploy]' : '[saved]'}
+          <button size-="small" variant-="background2" onClick={save} disabled={saving}>
+            {saving ? '[redeploying…]' : dirty ? '[save & redeploy]' : '[redeploy]'}
           </button>
         </div>
         <div className="mt-4">
