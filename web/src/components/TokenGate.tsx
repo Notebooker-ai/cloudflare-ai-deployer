@@ -74,7 +74,6 @@ export default function TokenGate() {
             ['Workers KV Storage', 'Edit'],
             ['Workers AI', 'Read'],
             ['Account Analytics', 'Read'],
-            ['User Details', 'Read'],
           ].map(([perm, level]) => (
             <li key={perm} className="flex items-center justify-between border-b border-line pb-2 dark:border-line-dark">
               <span>{perm}</span>

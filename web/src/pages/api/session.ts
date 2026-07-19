@@ -24,12 +24,17 @@ export async function POST(ctx: APIContext) {
     }
 
     const cf = new CloudflareClient(token.trim());
-    const verified = await cf.verifyToken();
-    if (!verified || verified.status !== 'active') {
-      return json({ error: 'Token is invalid or inactive' }, 401);
-    }
 
-    const accounts = await cf.listAccounts();
+    // Validate by listing accounts — this is the capability the app actually
+    // needs, and it works for account-scoped tokens that don't include
+    // "User Details: Read" (which /user/tokens/verify requires). A truly
+    // invalid token fails here with a 4xx.
+    let accounts;
+    try {
+      accounts = await cf.listAccounts();
+    } catch {
+      return json({ error: 'Token is invalid or lacks account access.' }, 401);
+    }
     if (!accounts.length) {
       return json({ error: 'Token can’t access any account. Check its Account Resources scope.' }, 403);
     }

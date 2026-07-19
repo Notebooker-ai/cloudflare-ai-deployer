@@ -34,10 +34,10 @@ Paste a scoped Cloudflare API token on the landing page. Token needs:
 | Workers KV Storage    | Edit  |
 | Workers AI            | Read  |
 | Account Analytics     | Read  |
-| User Details          | Read  |
 
 Scope **Account Resources** to a single account. Cloudflare can't scope a token
-to one worker/namespace, so use a dedicated, revocable token.
+to one worker/namespace, so use a dedicated, revocable token. (The app validates
+tokens by listing accessible accounts, so "User Details: Read" is not required.)
 
 ## Deploying to open.notebooker.ai
 
