@@ -50,13 +50,8 @@ const THEMES: Array<[value: string, label: string]> = [
     <!-- Apply the saved theme before paint (no flash). -->
     <script is:inline>
       (() => {
-        let theme = localStorage.getItem('webtui-theme');
-        if (!theme) {
-          // Migrate the old boolean preference; fall back to system scheme.
-          if (localStorage.getItem('darkMode') === 'true') theme = 'dark';
-          else if (window.matchMedia('(prefers-color-scheme: dark)').matches) theme = 'dark';
-          else theme = 'light';
-        }
+        // Default to catppuccin mocha unless the visitor has chosen a theme.
+        const theme = localStorage.getItem('webtui-theme') || 'catppuccin-mocha';
         if (theme !== 'light') document.documentElement.setAttribute('data-webtui-theme', theme);
       })();
     </script>
@@ -100,6 +95,7 @@ const THEMES: Array<[value: string, label: string]> = [
         const select = document.getElementById('theme-select');
         if (!select) return;
         select.value = document.documentElement.getAttribute('data-webtui-theme') || 'light';
+        if (![...select.options].some((o) => o.value === select.value)) select.value = 'catppuccin-mocha';
         select.addEventListener('change', () => {
           const theme = select.value;
           if (theme === 'light') document.documentElement.removeAttribute('data-webtui-theme');

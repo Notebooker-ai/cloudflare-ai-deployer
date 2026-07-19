@@ -59,7 +59,7 @@ export default function UsagePanel() {
         <>
           <div className="mt-3">
             <div className="flex flex-wrap items-baseline justify-between gap-2">
-              <span className="text-xl font-bold">
+              <span className="text-xl font-bold text-warn">
                 {usage.estimatedNeuronsToday.toLocaleString()}
               </span>
               <span className="text-fg2">/ {usage.freeDailyNeurons.toLocaleString()} free</span>

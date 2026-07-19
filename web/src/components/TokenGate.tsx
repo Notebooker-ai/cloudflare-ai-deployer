@@ -38,7 +38,7 @@ export default function TokenGate() {
           Paste a scoped Cloudflare API token. We hold it only in an encrypted, expiring cookie —
           never in a database.
         </p>
-        <label className="mt-5 mb-1 block text-fg2">cloudflare_api_token:</label>
+        <label className="mt-5 mb-1 block text-accent2">cloudflare_api_token:</label>
         <input
           type="password"
           className="w-full"

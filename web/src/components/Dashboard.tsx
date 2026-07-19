@@ -161,7 +161,7 @@ function Onboarding({ state, onDeployed }: { state: DashboardState; onDeployed: 
           </p>
         </div>
       )}
-      <label className="mt-4 mb-1 block text-fg2">worker_name:</label>
+      <label className="mt-4 mb-1 block text-accent2">worker_name:</label>
       <input
         className="w-full"
         value={workerName}
@@ -173,7 +173,7 @@ function Onboarding({ state, onDeployed }: { state: DashboardState; onDeployed: 
       </p>
 
       <div className="mt-5">
-        <label className="mb-2 block text-fg2">models:</label>
+        <label className="mb-2 block text-accent2">models:</label>
         <ModelPicker value={models} onChange={setModels} />
       </div>
 
@@ -229,7 +229,7 @@ function Manage({ state }: { state: DashboardState }) {
       )}
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <ApiKeyPanel workerName={config.workerName} baseUrl={config.baseUrl} />
+        <ApiKeyPanel workerName={config.workerName} baseUrl={config.baseUrl} models={savedModels} />
         <UsagePanel />
       </div>
 

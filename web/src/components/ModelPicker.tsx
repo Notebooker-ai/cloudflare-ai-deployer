@@ -64,7 +64,7 @@ export default function ModelPicker({ value, onChange }: Props) {
         const unlisted = current && !g.models.some((m) => m.id === current);
         return (
           <div key={g.key} className="min-w-0">
-            <label className="mb-1 block text-fg2">{g.label.toLowerCase()}:</label>
+            <label className="mb-1 block text-accent2">{g.label.toLowerCase()}:</label>
             <select value={current} onChange={(e) => set(g.key, e.target.value)}>
               <option value="">— none —</option>
               {unlisted && <option value={current}>{current} (current)</option>}

@@ -31,8 +31,10 @@
 @layer base {
   :root {
     --accent: #1d4ed8;
+    --accent2: #0d9488;
     --danger: #dc2626;
     --ok: #16a34a;
+    --warn: #b45309;
     --font-family: "Fira Code", "JetBrains Mono", ui-monospace, SFMono-Regular,
       Menlo, monospace, "Symbols Nerd Font";
     --font-size: 15px;
@@ -40,8 +42,10 @@
 
   [data-webtui-theme="dark"] {
     --accent: #60a5fa;
+    --accent2: #2dd4bf;
     --danger: #f87171;
     --ok: #4ade80;
+    --warn: #fbbf24;
   }
 
   /*
@@ -51,33 +55,45 @@
   */
   [data-webtui-theme^="catppuccin"] {
     --accent: var(--mauve);
+    --accent2: var(--blue);
     --danger: var(--red);
     --ok: var(--green);
+    --warn: var(--yellow);
   }
   [data-webtui-theme^="gruvbox"] {
     --accent: var(--gb-orange);
+    --accent2: var(--gb-blue);
     --danger: var(--gb-red);
     --ok: var(--gb-green);
+    --warn: var(--gb-yellow);
   }
   [data-webtui-theme="nord"] {
     --accent: var(--nord8);
+    --accent2: var(--nord9);
     --danger: var(--nord11);
     --ok: var(--nord14);
+    --warn: var(--nord13);
   }
   [data-webtui-theme^="everforest"] {
     --accent: var(--green);
+    --accent2: var(--blue);
     --danger: var(--red);
     --ok: var(--aqua);
+    --warn: var(--yellow);
   }
   [data-webtui-theme^="vitesse"] {
     --accent: var(--green);
+    --accent2: var(--blue);
     --danger: var(--red);
     --ok: var(--aqua);
+    --warn: var(--yellow);
   }
   [data-webtui-theme="osmium"] {
     --accent: var(--purple-fg);
+    --accent2: var(--blue-fg);
     --danger: var(--red-fg);
     --ok: var(--green-fg);
+    --warn: var(--orange-fg);
   }
 
   /* Terminal wrap behavior is authentic but hostile to prose — soften it. */
@@ -181,7 +197,9 @@
   --color-fg1: var(--foreground1);
   --color-fg2: var(--foreground2);
   --color-accent: var(--accent);
+  --color-accent2: var(--accent2);
   --color-danger: var(--danger);
   --color-ok: var(--ok);
+  --color-warn: var(--warn);
   --font-mono: var(--font-family);
 }

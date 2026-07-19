@@ -103,7 +103,7 @@ export default function ChatTester({ workerName }: { workerName: string }) {
                   </>
                 ) : (
                   <>
-                    <span className="text-fg2">ai&gt;</span>{' '}
+                    <span className="text-accent2">ai&gt;</span>{' '}
                     <span className="text-fg1">
                       {m.content}
                       {!m.content && streaming && <span is-="spinner" variant-="dots"></span>}
