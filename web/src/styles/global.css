@@ -1,20 +1,40 @@
-@import "tailwindcss";
-@import "@webtui/css";
-
 /*
-  WebTUI terminal aesthetic with the framework's stock colors — its default
-  --background0..3 / --foreground0..2 (white/black light, black/white dark,
-  flipped via [data-webtui-theme="dark"]). We only add semantic status colors
-  (WebTUI defines none) and map an "accent" onto the default foreground so
-  emphasis stays monochrome.
+  WebTUI, set up per the docs: declare layer order first, then import base,
+  utils, and the components we actually use. Tailwind (layout utilities only)
+  shares the cascade; its `utilities` layer comes last so spacing/grid classes
+  win over component styles.
 */
+@layer theme, base, utils, components, utilities;
+
+@import "tailwindcss";
+
+@import "@webtui/css/base.css";
+@import "@webtui/css/utils/box.css";
+@import "@webtui/css/components/typography.css";
+@import "@webtui/css/components/button.css";
+@import "@webtui/css/components/badge.css";
+@import "@webtui/css/components/input.css";
+@import "@webtui/css/components/textarea.css";
+@import "@webtui/css/components/spinner.css";
+
+/* Icon glyphs (Font Awesome, Octicons, … via Symbols Nerd Font). */
+@import "@webtui/plugin-nf";
+
+/* Every published WebTUI theme — selected via data-webtui-theme on <html>. */
+@import "@webtui/theme-catppuccin";
+@import "@webtui/theme-everforest";
+@import "@webtui/theme-gruvbox";
+@import "@webtui/theme-nord";
+@import "@webtui/theme-osmium";
+@import "@webtui/theme-vitesse";
+
 @layer base {
   :root {
     --accent: var(--foreground0);
     --danger: #dc2626;
     --ok: #16a34a;
-    --font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo,
-      Consolas, monospace;
+    --font-family: "Fira Code", "JetBrains Mono", ui-monospace, SFMono-Regular,
+      Menlo, monospace, "Symbols Nerd Font";
     --font-size: 15px;
   }
 
@@ -30,7 +50,7 @@
     overflow-wrap: break-word;
   }
 
-  /* Monochrome theme: links carry a standing underline for affordance. */
+  /* Monochrome-friendly links: standing underline for affordance. */
   a {
     color: var(--foreground0);
     text-decoration: underline;
@@ -80,6 +100,31 @@
     padding: 0.25lh 2ch;
     margin-right: 2ch;
     cursor: pointer;
+  }
+}
+
+@layer components {
+  /*
+    Soft section separation instead of hard fg-colored box borders: a muted
+    1px ring plus an offset block shadow, both drawn from the theme's
+    background scale so every theme stays cohesive.
+  */
+  .panel {
+    background-color: var(--background0);
+    box-shadow:
+      0 0 0 1px var(--background2),
+      0.75ch 0.5lh 0 0 var(--background1);
+    padding: 0.75lh 2ch 1lh;
+  }
+
+  /* Inline notice: quiet surface with a colored lead bar. */
+  .note {
+    background-color: var(--background1);
+    border-left: 0.5ch solid var(--background3);
+    padding: 0.5lh 1.5ch;
+  }
+  .note-danger {
+    border-left-color: var(--danger);
   }
 }
 

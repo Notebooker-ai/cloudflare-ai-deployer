@@ -10,6 +10,25 @@ const {
   title = 'Open Notebooker — deploy your own AI endpoint',
   description = 'Deploy an OpenAI-compatible AI endpoint on your own Cloudflare account in one click. Try out your own AI with Notebooker.ai.',
 } = Astro.props;
+
+// Stock WebTUI light/dark plus every installed theme variant.
+const THEMES: Array<[value: string, label: string]> = [
+  ['light', 'light'],
+  ['dark', 'dark'],
+  ['catppuccin-latte', 'catppuccin latte'],
+  ['catppuccin-frappe', 'catppuccin frappé'],
+  ['catppuccin-macchiato', 'catppuccin macchiato'],
+  ['catppuccin-mocha', 'catppuccin mocha'],
+  ['everforest-light', 'everforest light'],
+  ['everforest-dark', 'everforest dark'],
+  ['gruvbox-light', 'gruvbox light'],
+  ['gruvbox-dark', 'gruvbox dark'],
+  ['nord', 'nord'],
+  ['osmium', 'osmium'],
+  ['vitesse-light', 'vitesse light'],
+  ['vitesse-dark', 'vitesse dark'],
+  ['vitesse-black', 'vitesse black'],
+];
 ---
 
 <!doctype html>
@@ -24,31 +43,37 @@ const {
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,700;1,400&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&display=swap"
       rel="stylesheet"
     />
 
-    <!-- Prevent dark-mode flash. -->
+    <!-- Apply the saved theme before paint (no flash). -->
     <script is:inline>
-      if (
-        localStorage.getItem('darkMode') === 'true' ||
-        (!localStorage.getItem('darkMode') &&
-          window.matchMedia('(prefers-color-scheme: dark)').matches)
-      ) {
-        document.documentElement.setAttribute('data-webtui-theme', 'dark');
-      }
+      (() => {
+        let theme = localStorage.getItem('webtui-theme');
+        if (!theme) {
+          // Migrate the old boolean preference; fall back to system scheme.
+          if (localStorage.getItem('darkMode') === 'true') theme = 'dark';
+          else if (window.matchMedia('(prefers-color-scheme: dark)').matches) theme = 'dark';
+          else theme = 'light';
+        }
+        if (theme !== 'light') document.documentElement.setAttribute('data-webtui-theme', theme);
+      })();
     </script>
   </head>
   <body class="min-h-screen">
-    <header class="sticky top-0 z-50 border-b-2 border-fg0 bg-bg0/95 backdrop-blur">
-      <div class="mx-auto flex max-w-[110ch] items-center justify-between px-4 py-2 sm:px-6">
-        <a href="/" class="flex items-center gap-2 !text-fg0 hover:!no-underline">
+    <header class="sticky top-0 z-50 bg-bg0 shadow-[0_1px_0_0_var(--background2)]">
+      <div class="mx-auto flex max-w-[110ch] items-center justify-between gap-4 px-4 py-2 sm:px-6">
+        <a href="/" class="flex items-center gap-2 !no-underline">
           <span class="font-bold">Notebooker.ai</span>
           <span is-="badge" variant-="foreground0">OPEN</span>
         </a>
-        <button id="theme-toggle" size-="small" box-="square" aria-label="Toggle dark mode">
-          [ theme ]
-        </button>
+        <label class="flex items-center gap-2 text-fg2">
+          <span aria-hidden="true">&#xf1fc;</span>
+          <select id="theme-select" class="!w-auto" aria-label="Theme">
+            {THEMES.map(([value, label]) => <option value={value}>{label}</option>)}
+          </select>
+        </label>
       </div>
     </header>
 
@@ -56,7 +81,7 @@ const {
       <slot />
     </main>
 
-    <footer class="mt-16 border-t-2 border-bg2">
+    <footer class="mt-16 shadow-[0_-1px_0_0_var(--background2)]">
       <div
         class="mx-auto flex max-w-[110ch] flex-wrap items-center justify-between gap-3 px-4 py-6 text-fg2 sm:px-6"
       >
@@ -65,19 +90,23 @@ const {
           your account · your data.
         </span>
         <a href="https://github.com/Notebooker-ai/cloudflare-ai-deployer" target="_blank" rel="noreferrer">
-          [source: github]
+          &#xf09b; source
         </a>
       </div>
     </footer>
 
     <script is:inline>
-      document.getElementById('theme-toggle')?.addEventListener('click', () => {
-        const el = document.documentElement;
-        const isDark = el.getAttribute('data-webtui-theme') === 'dark';
-        if (isDark) el.removeAttribute('data-webtui-theme');
-        else el.setAttribute('data-webtui-theme', 'dark');
-        localStorage.setItem('darkMode', String(!isDark));
-      });
+      (() => {
+        const select = document.getElementById('theme-select');
+        if (!select) return;
+        select.value = document.documentElement.getAttribute('data-webtui-theme') || 'light';
+        select.addEventListener('change', () => {
+          const theme = select.value;
+          if (theme === 'light') document.documentElement.removeAttribute('data-webtui-theme');
+          else document.documentElement.setAttribute('data-webtui-theme', theme);
+          localStorage.setItem('webtui-theme', theme);
+        });
+      })();
     </script>
   </body>
 </html>

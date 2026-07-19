@@ -55,8 +55,8 @@ export default function VisionTester({
   }
 
   return (
-    <div box-="square" shear-="top" className="flex min-w-0 flex-col">
-      <div className="-mt-[0.5lh]">
+    <div className="panel flex min-w-0 flex-col">
+      <div>
         <span is-="badge" variant-="background2">
           vision
         </span>
@@ -65,7 +65,7 @@ export default function VisionTester({
         Ask questions about an image. Images only — Workers AI vision models don't read PDFs.
       </p>
       {!visionReady && (
-        <div box-="square" className="mt-3 text-sm text-fg1">
+        <div className="note mt-3 text-sm text-fg1">
           ! Your current chat model{chatModel ? ` (${chatModel})` : ''} doesn't appear to support
           images. Pick a vision-capable one — e.g. @cf/meta/llama-3.2-11b-vision-instruct or
           @cf/meta/llama-4-scout-17b-16e-instruct — then save &amp; redeploy.

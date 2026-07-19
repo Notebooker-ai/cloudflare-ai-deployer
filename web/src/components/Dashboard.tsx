@@ -61,9 +61,9 @@ export default function Dashboard() {
 
   if (error) {
     return (
-      <div box-="square">
+      <div className="panel">
         <p className="font-bold text-danger">! {error}</p>
-        <button size-="small" box-="square" className="mt-3" onClick={refresh}>
+        <button size-="small" variant-="background2" className="mt-3" onClick={refresh}>
           [retry]
         </button>
       </div>
@@ -92,7 +92,7 @@ export default function Dashboard() {
             </p>
           )}
         </div>
-        <button size-="small" box-="square" onClick={logout}>
+        <button size-="small" variant-="background2" onClick={logout}>
           [sign out]
         </button>
       </div>
@@ -132,19 +132,19 @@ function Onboarding({ state, onDeployed }: { state: DashboardState; onDeployed: 
   }
 
   return (
-    <div box-="double" shear-="top">
-      <div className="-mt-[0.5lh]">
+    <div className="panel">
+      <div>
         <span is-="badge" variant-="foreground0">
           deploy
         </span>
       </div>
       {state.kind === 'worker-missing' && (
-        <div box-="square" className="mt-3 text-fg1">
+        <div className="note mt-3 text-fg1">
           We found saved config but the worker is gone. Redeploy to bring it back.
         </div>
       )}
       {!state.subdomain && (
-        <div box-="square" className="mt-3">
+        <div className="note note-danger mt-3">
           <p className="font-bold text-danger">! no workers.dev subdomain on this account</p>
           <p className="mt-1 text-fg1">
             Deploys will fail until it exists. Open{' '}
@@ -222,7 +222,7 @@ function Manage({ state }: { state: DashboardState }) {
   return (
     <div className="space-y-6">
       {state.kind === 'drift' && (
-        <div box-="square" className="text-fg1">
+        <div className="note text-fg1">
           ! The live worker's models differ from your saved config. Saving below will redeploy
           from what's selected.
         </div>
@@ -233,12 +233,12 @@ function Manage({ state }: { state: DashboardState }) {
         <UsagePanel />
       </div>
 
-      <div box-="square" shear-="top">
-        <div className="-mt-[0.5lh] flex items-center justify-between">
+      <div className="panel">
+        <div className="flex items-center justify-between gap-2">
           <span is-="badge" variant-="background2">
             models
           </span>
-          <button size-="small" box-="square" onClick={save} disabled={!dirty || saving}>
+          <button size-="small" variant-="background2" onClick={save} disabled={!dirty || saving}>
             {saving ? '[redeploying…]' : dirty ? '[save & redeploy]' : '[saved]'}
           </button>
         </div>

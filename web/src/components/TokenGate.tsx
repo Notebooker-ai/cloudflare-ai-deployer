@@ -27,8 +27,8 @@ export default function TokenGate() {
 
   return (
     <div className="grid gap-6 md:grid-cols-[1fr_0.9fr]">
-      <form onSubmit={submit} box-="double" shear-="top" className="min-w-0">
-        <div className="-mt-[0.5lh]">
+      <form onSubmit={submit} className="panel min-w-0">
+        <div>
           <span is-="badge" variant-="foreground0">
             auth
           </span>
@@ -55,13 +55,13 @@ export default function TokenGate() {
         <button
           type="button"
           size-="small"
-          box-="square"
+          variant-="background2"
           className="mt-3"
           onClick={() => setShowGuide((s) => !s)}
         >
           {showGuide ? '[- hide]' : '[? how do I create a token]'}
         </button>
-        <div className="mt-5 border-t-2 border-bg2 pt-3 text-sm text-fg2">
+        <div className="note mt-5 text-sm text-fg2">
           <p>
             <span className="font-bold text-fg1">We never save your Cloudflare token</span> — it
             lives only in an encrypted cookie that expires with your session. For best security,
@@ -76,8 +76,8 @@ export default function TokenGate() {
         </div>
       </form>
 
-      <div box-="square" shear-="top" className="min-w-0">
-        <div className="-mt-[0.5lh]">
+      <div className="panel min-w-0">
+        <div>
           <span is-="badge" variant-="background2">
             setup
           </span>

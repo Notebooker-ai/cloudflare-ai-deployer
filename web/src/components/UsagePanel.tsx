@@ -42,12 +42,12 @@ export default function UsagePanel() {
   const bar = '█'.repeat(filled) + '░'.repeat(BAR_WIDTH - filled);
 
   return (
-    <div box-="square" shear-="top" className="min-w-0">
-      <div className="-mt-[0.5lh] flex items-center justify-between">
+    <div className="panel min-w-0">
+      <div className="flex items-center justify-between gap-2">
         <span is-="badge" variant-="foreground0">
           neurons
         </span>
-        <button size-="small" box-="square" onClick={load} disabled={loading}>
+        <button size-="small" variant-="background2" onClick={load} disabled={loading}>
           {loading ? '[…]' : '[refresh]'}
         </button>
       </div>

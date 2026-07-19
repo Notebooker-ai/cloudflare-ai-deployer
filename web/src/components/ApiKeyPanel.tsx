@@ -64,8 +64,8 @@ export default function ApiKeyPanel({ workerName, baseUrl, initialKey }: Props) 
   const masked = key ? key.slice(0, 6) + '•'.repeat(20) + key.slice(-4) : '';
 
   return (
-    <div box-="square" shear-="top" className="min-w-0">
-      <div className="-mt-[0.5lh] flex items-center justify-between">
+    <div className="panel min-w-0">
+      <div className="flex items-center justify-between gap-2">
         <span is-="badge" variant-="foreground0">
           endpoint
         </span>
@@ -79,7 +79,7 @@ export default function ApiKeyPanel({ workerName, baseUrl, initialKey }: Props) 
         <code className="block min-w-0 flex-1 overflow-x-auto bg-bg1 px-2 py-1 whitespace-nowrap">
           {baseUrl}
         </code>
-        <button size-="small" box-="square" className="shrink-0" onClick={() => copy(baseUrl, 'url')}>
+        <button size-="small" variant-="background2" className="shrink-0" onClick={() => copy(baseUrl, 'url')}>
           {copied === 'url' ? '[copied]' : '[copy]'}
         </button>
       </div>
@@ -97,13 +97,13 @@ export default function ApiKeyPanel({ workerName, baseUrl, initialKey }: Props) 
             </code>
             <button
               size-="small"
-              box-="square"
+              variant-="background2"
               className="shrink-0"
               onClick={() => setRevealed((r) => !r)}
             >
               {revealed ? '[hide]' : '[reveal]'}
             </button>
-            <button size-="small" box-="square" className="shrink-0" onClick={() => copy(key, 'key')}>
+            <button size-="small" variant-="background2" className="shrink-0" onClick={() => copy(key, 'key')}>
               {copied === 'key' ? '[copied]' : '[copy]'}
             </button>
           </div>
@@ -113,7 +113,7 @@ export default function ApiKeyPanel({ workerName, baseUrl, initialKey }: Props) 
           </p>
         </>
       ) : (
-        <div box-="square" className="text-fg1">
+        <div className="note text-fg1">
           Your endpoint key isn't viewable — keys are never stored, and this session didn't
           generate one. Your existing key keeps working for API clients that already have it; to
           see one here again, renew it below (this <span className="font-bold">replaces</span> the
@@ -121,13 +121,13 @@ export default function ApiKeyPanel({ workerName, baseUrl, initialKey }: Props) 
         </div>
       )}
 
-      <div className="mt-4 border-t-2 border-bg2 pt-3">
+      <div className="mt-4">
         {!confirming ? (
-          <button size-="small" box-="square" onClick={() => setConfirming(true)}>
+          <button size-="small" variant-="background2" onClick={() => setConfirming(true)}>
             {key ? '[renew key…]' : '[renew key to view…]'}
           </button>
         ) : (
-          <div box-="square">
+          <div className="note note-danger">
             <p className="text-fg1">
               Renewing replaces the key immediately. Any client using the old key will get{' '}
               <span className="font-bold text-danger">401</span> once it propagates. Continue?
@@ -136,7 +136,7 @@ export default function ApiKeyPanel({ workerName, baseUrl, initialKey }: Props) 
               <button size-="small" onClick={cycle} disabled={cycling}>
                 {cycling ? 'renewing…' : 'yes, renew now'}
               </button>
-              <button size-="small" box-="square" onClick={() => setConfirming(false)} disabled={cycling}>
+              <button size-="small" variant-="background2" onClick={() => setConfirming(false)} disabled={cycling}>
                 [cancel]
               </button>
             </div>

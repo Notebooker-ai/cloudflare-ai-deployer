@@ -27,8 +27,8 @@ export default function SttTester({ workerName }: { workerName: string }) {
   }
 
   return (
-    <div box-="square" shear-="top" className="flex min-w-0 flex-col">
-      <div className="-mt-[0.5lh]">
+    <div className="panel flex min-w-0 flex-col">
+      <div>
         <span is-="badge" variant-="background2">
           speech-to-text
         </span>
