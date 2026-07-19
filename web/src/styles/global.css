@@ -2,36 +2,23 @@
 @import "@webtui/css";
 
 /*
-  WebTUI terminal aesthetic, tinted with the Notebooker "paper & ink" palette.
-  WebTUI reads --background0..3 / --foreground0..2; dark mode flips via
-  [data-webtui-theme="dark"] on <html>.
+  WebTUI terminal aesthetic with the framework's stock colors — its default
+  --background0..3 / --foreground0..2 (white/black light, black/white dark,
+  flipped via [data-webtui-theme="dark"]). We only add semantic status colors
+  (WebTUI defines none) and map an "accent" onto the default foreground so
+  emphasis stays monochrome.
 */
 @layer base {
   :root {
-    --background0: #faf6ef; /* paper */
-    --background1: #f0e9dc; /* paper-code */
-    --background2: #e3dcd0; /* line */
-    --background3: #cfc5b2;
-    --foreground0: #211d18; /* ink */
-    --foreground1: #5c5347; /* ink-soft */
-    --foreground2: #8a7f6c; /* ink-faint */
-    --accent: #4c2ea8;
-    --danger: #b91c1c;
-    --ok: #166534;
+    --accent: var(--foreground0);
+    --danger: #dc2626;
+    --ok: #16a34a;
     --font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo,
       Consolas, monospace;
     --font-size: 15px;
   }
 
   [data-webtui-theme="dark"] {
-    --background0: #1b1712; /* night */
-    --background1: #2c2620; /* night-code */
-    --background2: #3a332a; /* line-dark */
-    --background3: #55493a;
-    --foreground0: #ece5d8; /* ink-invert */
-    --foreground1: #b5aa97; /* ink-softinvert */
-    --foreground2: #9a8f7d;
-    --accent: #b7a5f0;
     --danger: #f87171;
     --ok: #4ade80;
   }
@@ -43,11 +30,13 @@
     overflow-wrap: break-word;
   }
 
+  /* Monochrome theme: links carry a standing underline for affordance. */
   a {
-    color: var(--accent);
+    color: var(--foreground0);
+    text-decoration: underline;
   }
   a:hover {
-    text-decoration: underline;
+    font-weight: var(--font-weight-bold);
   }
 
   /* Tailwind preflight strips list styles; restore TUI-friendly numbering. */
