@@ -67,5 +67,7 @@ export async function establishSession(
 }
 
 export function clearSession(ctx: Ctx): void {
-  ctx.cookies.delete(COOKIE_NAME, { path: '/' });
+  // Expire via set() with the same attributes the cookie was issued with;
+  // verified live to emit `nb_session=; Max-Age=0` and end the session.
+  ctx.cookies.set(COOKIE_NAME, '', { ...sessionCookieOptions(0), maxAge: 0 });
 }
