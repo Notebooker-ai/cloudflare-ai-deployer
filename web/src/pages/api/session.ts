@@ -41,6 +41,26 @@ export async function POST(ctx: APIContext) {
     const account =
       accounts.find((a) => a.id === preferredAccount) || accounts[0];
 
+    // Pre-flight the token's permissions so a gap surfaces here, with a clear
+    // message, instead of as a bare "Authentication error" mid-flow.
+    const caps = await cf.checkCapabilities(account.id);
+    const missingCore = [
+      ...(caps.workers ? [] : ['Workers Scripts: Edit']),
+      ...(caps.kv ? [] : ['Workers KV Storage: Edit']),
+    ];
+    if (missingCore.length) {
+      return json(
+        {
+          error: `Token is missing required permission${missingCore.length > 1 ? 's' : ''}: ${missingCore.join(', ')}. Edit the token at dash.cloudflare.com → API Tokens and retry.`,
+        },
+        403
+      );
+    }
+    const warnings = [
+      ...(caps.ai ? [] : ['Workers AI: Read missing — model catalog won’t load.']),
+      ...(caps.analytics ? [] : ['Account Analytics: Read missing — usage monitoring won’t load.']),
+    ];
+
     const subdomain = await cf.getWorkersSubdomain(account.id);
 
     await establishSession(ctx, {
@@ -55,6 +75,7 @@ export async function POST(ctx: APIContext) {
       accountName: account.name,
       accounts: accounts.map((a) => ({ id: a.id, name: a.name })),
       subdomain,
+      warnings,
     });
   } catch (e) {
     return toErrorResponse(e);

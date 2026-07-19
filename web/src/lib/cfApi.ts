@@ -90,6 +90,39 @@ export class CloudflareClient {
     }
   }
 
+  /**
+   * Probe which permissions the token actually has on this account, so we can
+   * tell the user exactly what's missing instead of a bare Cloudflare
+   * "Authentication error" mid-flow.
+   */
+  async checkCapabilities(accountId: string): Promise<{
+    workers: boolean;
+    kv: boolean;
+    ai: boolean;
+    analytics: boolean;
+  }> {
+    const probe = async (fn: () => Promise<unknown>) => {
+      try {
+        await fn();
+        return true;
+      } catch {
+        return false;
+      }
+    };
+    const [workers, kv, ai, analytics] = await Promise.all([
+      probe(() => this.request(`/accounts/${accountId}/workers/scripts`)),
+      probe(() => this.request(`/accounts/${accountId}/storage/kv/namespaces?per_page=1`)),
+      probe(() => this.request(`/accounts/${accountId}/ai/models/search?per_page=1`)),
+      probe(() =>
+        this.graphql(
+          `query($accountTag: String!) { viewer { accounts(filter: {accountTag: $accountTag}) { __typename } } }`,
+          { accountTag: accountId }
+        )
+      ),
+    ]);
+    return { workers, kv, ai, analytics };
+  }
+
   // ---- Workers AI catalog --------------------------------------------------
 
   async searchAiModels(
