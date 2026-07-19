@@ -72,6 +72,44 @@ async function retryAIRun(env, cfModel, modelOptions, maxRetries = 3) {
     }
 }
 
+/** Build a minimal OpenAI-shaped completion around a fixed message. */
+function singleMessageCompletion(text, model) {
+    return {
+        id: `chatcmpl-${crypto.randomUUID()}`,
+        object: 'chat.completion',
+        created: Math.floor(Date.now() / 1000),
+        model,
+        choices: [
+            { index: 0, message: { role: 'assistant', content: text }, finish_reason: 'stop' },
+        ],
+        usage: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 },
+    };
+}
+
+/** Emit a fixed message as a one-shot OpenAI-style SSE stream. */
+function sseSingleMessage(text, model) {
+    const id = `chatcmpl-${crypto.randomUUID()}`;
+    const created = Math.floor(Date.now() / 1000);
+    const chunk = (delta, finish) =>
+        `data: ${JSON.stringify({
+            id,
+            object: 'chat.completion.chunk',
+            created,
+            model,
+            choices: [{ index: 0, delta, finish_reason: finish ?? null }],
+        })}\n\n`;
+    const body =
+        chunk({ role: 'assistant', content: text }) + chunk({}, 'stop') + 'data: [DONE]\n\n';
+    return new Response(body, {
+        headers: {
+            'Content-Type': 'text/event-stream',
+            'Cache-Control': 'no-cache',
+            'Connection': 'keep-alive',
+            ...corsHeaders(),
+        },
+    });
+}
+
 function extractResponseText(response) {
     if (!response) return '';
     if (typeof response.response === 'string') return response.response;
@@ -165,6 +203,10 @@ async function handleChatCompletions(request, env, ctx) {
         return jsonResponse({ error: { message: 'Chat model is not configured. Add a "chat" entry to models.json.', type: 'invalid_request_error' } }, 404);
     }
 
+    // Captured for the catch block so gated-model (error 5016) license
+    // agreements can be replayed in the format Cloudflare requires.
+    let licenseCtx = null;
+
     try {
         const body = await request.json();
         const { model, messages, stream = false, tools, max_tokens, max_completion_tokens, temperature, response_format, structured } = body;
@@ -191,6 +233,15 @@ async function handleChatCompletions(request, env, ctx) {
 
         const sanitizedMessages = sanitizeMessages(messages);
         const processedMessages = jsonMode ? enforceJsonOutput(sanitizedMessages) : sanitizedMessages;
+
+        const lastUserMsg = [...sanitizedMessages].reverse().find((m) => m.role === 'user');
+        licenseCtx = {
+            cfModel,
+            stream,
+            userSaidAgree:
+                typeof lastUserMsg?.content === 'string' &&
+                lastUserMsg.content.trim().toLowerCase() === 'agree',
+        };
 
         const modelOptions = {
             messages: processedMessages,
@@ -287,6 +338,39 @@ async function handleChatCompletions(request, env, ctx) {
     } catch (error) {
         console.error('Chat completions error:', error);
         const msg = (error.message || '').toLowerCase();
+
+        // Gated models (e.g. Meta llama-3.2-vision) reject everything with
+        // 5016 until the account submits the literal prompt "agree" — and the
+        // agreement only registers in { prompt } format, not { messages }.
+        if (msg.includes('5016') || msg.includes('must submit the prompt')) {
+            if (licenseCtx?.userSaidAgree) {
+                try {
+                    await env.AI.run(licenseCtx.cfModel, { prompt: 'agree' });
+                    const text = `License accepted for ${licenseCtx.cfModel} — you can use this model now.`;
+                    return licenseCtx.stream
+                        ? sseSingleMessage(text, licenseCtx.cfModel)
+                        : jsonResponse(singleMessageCompletion(text, licenseCtx.cfModel));
+                } catch (agreeError) {
+                    return jsonResponse({
+                        error: {
+                            message: `License agreement failed: ${agreeError.message || agreeError}`,
+                            type: 'server_error',
+                        },
+                    }, 500);
+                }
+            }
+            return jsonResponse({
+                error: {
+                    message:
+                        'This model requires a one-time license agreement for your Cloudflare account. ' +
+                        'Send the single chat message "agree" to accept it, then chat normally. ' +
+                        `(${error.message || ''})`,
+                    type: 'invalid_request_error',
+                    code: 'model_agreement_required',
+                },
+            }, 403);
+        }
+
         if (msg.includes('3030')) {
             return jsonResponse({
                 error: {
