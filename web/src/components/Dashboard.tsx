@@ -6,6 +6,7 @@ import TtsTester from './TtsTester';
 import SttTester from './SttTester';
 import VisionTester from './VisionTester';
 import UsagePanel from './UsagePanel';
+import EmbedTester from './EmbedTester';
 
 const DEFAULT_MODELS: ModelConfig = {
   chat: '@cf/meta/llama-3.3-70b-instruct-fp8-fast',
@@ -255,6 +256,7 @@ function Manage({ state }: { state: DashboardState }) {
         {savedModels.chat && (
           <VisionTester workerName={config.workerName} chatModel={savedModels.chat} />
         )}
+        {savedModels.embedding && <EmbedTester workerName={config.workerName} />}
       </div>
     </div>
   );
