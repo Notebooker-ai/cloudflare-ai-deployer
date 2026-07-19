@@ -66,6 +66,21 @@ export async function establishSession(
   ctx.cookies.set(COOKIE_NAME, sealed, sessionCookieOptions(DEFAULT_TTL_SECONDS));
 }
 
+/**
+ * Re-seal the session with updates (e.g. a freshly generated worker key).
+ * Preserves iat; renews exp like the sliding renewal does.
+ */
+export async function updateSession(
+  ctx: Ctx,
+  session: SessionPayload,
+  patch: Partial<SessionPayload>
+): Promise<void> {
+  const now = Math.floor(Date.now() / 1000);
+  const next: SessionPayload = { ...session, ...patch, exp: now + DEFAULT_TTL_SECONDS };
+  const sealed = await seal(next, getSecret(ctx));
+  ctx.cookies.set(COOKIE_NAME, sealed, sessionCookieOptions(DEFAULT_TTL_SECONDS));
+}
+
 export function clearSession(ctx: Ctx): void {
   // Expire via set() with the same attributes the cookie was issued with;
   // verified live to emit `nb_session=; Max-Age=0` and end the session.

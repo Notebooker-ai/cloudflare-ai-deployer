@@ -14,6 +14,12 @@ export interface SessionPayload {
   accountId: string;
   /** Account's workers.dev subdomain (for building base URLs), if known. */
   subdomain?: string;
+  /**
+   * Endpoint API keys generated this session, by worker name. Held ONLY here
+   * (encrypted cookie) — never persisted anywhere. Gone when the session ends;
+   * the user cycles the key to view/test again.
+   */
+  workerKeys?: Record<string, string>;
   /** Absolute expiry, epoch seconds. */
   exp: number;
   /** Issued-at, epoch seconds (for absolute-lifetime cap on sliding renewal). */

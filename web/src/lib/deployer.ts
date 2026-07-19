@@ -1,6 +1,12 @@
 /**
  * Orchestration shared by the API endpoints: deploy/redeploy the worker, and
  * derive the dashboard state from the user's account on each visit (no DB).
+ *
+ * Key security model: the endpoint API key is NEVER persisted — not in KV, not
+ * on our side. It exists as the worker's write-only secret (enforcement) and,
+ * transiently, in the caller's encrypted session cookie (display/testing).
+ * Redeploys carry the secret forward with an `inherit` binding; cycling
+ * replaces it via the dedicated secrets endpoint.
  */
 import type { CloudflareClient } from './cfApi';
 import {
@@ -11,23 +17,17 @@ import {
 } from './template';
 import {
   ensureNamespace,
-  findNamespaceId,
   listManagedNamespaces,
   readConfig,
   writeConfig,
   type DeployerConfig,
 } from './kvStore';
-import {
-  buildBaseUrl,
-  generateApiKey,
-  generateApiKeyId,
-  sanitizeWorkerName,
-} from './util';
+import { buildBaseUrl, generateApiKey, sanitizeWorkerName } from './util';
 
 export type StateKind =
   | 'first-visit'
   | 'healthy'
-  | 'key-unrecoverable'
+  | 'no-saved-config'
   | 'worker-missing'
   | 'drift';
 
@@ -42,7 +42,8 @@ export interface DashboardState {
 
 /**
  * Inspect the user's account and decide which UI state to show.
- * Picks the first deployer-managed namespace if one exists.
+ * Picks the first deployer-managed namespace if one exists. Legacy blobs that
+ * still contain a stored key are scrubbed here (we no longer persist keys).
  */
 export async function discover(
   cf: CloudflareClient,
@@ -60,7 +61,19 @@ export async function discover(
     (preferredWorker && managed.find((m) => m.workerName === preferredWorker)) || managed[0];
   const workerName = chosen.workerName;
 
-  const config = await readConfig(cf, accountId, chosen.id);
+  let config = await readConfig(cf, accountId, chosen.id);
+
+  // One-time scrub of legacy blobs that stored the key.
+  if (config && (config.apiKey || config.pendingApiKey || config.apiKeyId)) {
+    const { apiKey, pendingApiKey, apiKeyId, ...rest } = config;
+    config = rest as DeployerConfig;
+    try {
+      await writeConfig(cf, accountId, chosen.id, config);
+    } catch {
+      /* scrub retried on next visit */
+    }
+  }
+
   const exists = await cf.scriptExists(accountId, workerName);
 
   if (!exists) {
@@ -72,8 +85,8 @@ export async function discover(
   const script = await cf.getScript(accountId, workerName);
   if (script) liveModels = extractModelsFromScript(script);
 
-  if (!config || !config.apiKey) {
-    return { kind: 'key-unrecoverable', workerName, config: config ?? undefined, liveModels, subdomain };
+  if (!config) {
+    return { kind: 'no-saved-config', workerName, liveModels, subdomain };
   }
 
   const drift =
@@ -97,19 +110,19 @@ function sortModels(m: ModelConfig): Array<[string, string]> {
 export interface DeployInput {
   workerNameRaw: string;
   models: ModelConfig;
-  /** Reuse an existing key (redeploy) or generate a fresh one (first deploy). */
-  apiKey?: string;
-  apiKeyId?: string;
+  /** Whether the worker already exists (secret carried forward via inherit). */
+  workerExists: boolean;
 }
 
 export interface DeployResult {
   config: DeployerConfig;
   workerName: string;
   baseUrl: string;
-  apiKey: string;
+  /** Present only when a NEW key was generated (first deploy). Shown once. */
+  apiKey?: string;
 }
 
-/** Deploy (or redeploy) the worker and persist config into the user's KV. */
+/** Deploy (or redeploy) the worker and persist non-secret config to KV. */
 export async function deploy(
   cf: CloudflareClient,
   accountId: string,
@@ -117,16 +130,17 @@ export async function deploy(
   input: DeployInput
 ): Promise<DeployResult> {
   const workerName = sanitizeWorkerName(input.workerNameRaw);
-  const apiKey = input.apiKey ?? generateApiKey();
-  const apiKeyId = input.apiKeyId ?? generateApiKeyId();
+
+  // First deploy mints a key; redeploys inherit the existing secret unchanged.
+  const newKey = input.workerExists ? undefined : generateApiKey();
+  const secretBinding = input.workerExists
+    ? { type: 'inherit', name: 'API_KEY' }
+    : { type: 'secret_text', name: 'API_KEY', text: newKey };
 
   const script = buildWorkerScript(input.models);
   await cf.putScript(accountId, workerName, script, {
     compatibilityDate: COMPATIBILITY_DATE,
-    bindings: [
-      { type: 'ai', name: 'AI' },
-      { type: 'secret_text', name: 'API_KEY', text: apiKey },
-    ],
+    bindings: [{ type: 'ai', name: 'AI' }, secretBinding],
   });
 
   // Best-effort: enable the workers.dev route.
@@ -147,8 +161,6 @@ export async function deploy(
     workerName,
     baseUrl,
     models: input.models,
-    apiKey,
-    apiKeyId,
     createdAt: existing?.createdAt ?? nowIso,
     updatedAt: nowIso,
     keyRotatedAt: existing?.keyRotatedAt,
@@ -156,44 +168,69 @@ export async function deploy(
   };
   await writeConfig(cf, accountId, namespaceId, config);
 
-  return { config, workerName, baseUrl, apiKey };
+  return { config, workerName, baseUrl, apiKey: newKey };
 }
 
 /**
- * Rotate the API key: write a pending copy first (crash-safe), flip the worker
- * secret in place (no full redeploy), then promote pending -> apiKey.
+ * Rotate the API key: flip the worker secret in place (no full redeploy) and
+ * stamp keyRotatedAt in KV. The new key is returned to the caller and held
+ * only in their session cookie — never persisted.
  */
 export async function cycleKey(
   cf: CloudflareClient,
   accountId: string,
   workerName: string
-): Promise<{ apiKey: string; config: DeployerConfig }> {
-  const namespaceId = await findNamespaceId(cf, accountId, workerName);
-  if (!namespaceId) throw new Error('No config namespace found for this worker.');
-  const existing = await readConfig(cf, accountId, namespaceId);
-  if (!existing) throw new Error('No stored config found for this worker.');
-
+): Promise<{ apiKey: string }> {
   const newKey = generateApiKey();
-  const newKeyId = generateApiKeyId();
-  const nowIso = new Date().toISOString();
-
-  // 1) persist pending so the freshly generated key is never lost mid-flight.
-  await writeConfig(cf, accountId, namespaceId, { ...existing, pendingApiKey: newKey, updatedAt: nowIso });
-
-  // 2) flip the worker secret in place.
   await cf.putSecret(accountId, workerName, 'API_KEY', newKey);
 
-  // 3) promote.
-  const promoted: DeployerConfig = {
-    ...existing,
-    apiKey: newKey,
-    apiKeyId: newKeyId,
-    pendingApiKey: undefined,
-    keyRotatedAt: nowIso,
-    updatedAt: nowIso,
-  };
-  delete (promoted as any).pendingApiKey;
-  await writeConfig(cf, accountId, namespaceId, promoted);
+  // Best-effort timestamp update; the blob never holds the key itself.
+  try {
+    const namespaceId = await ensureNamespace(cf, accountId, workerName);
+    const existing = await readConfig(cf, accountId, namespaceId);
+    if (existing) {
+      const nowIso = new Date().toISOString();
+      const { apiKey, pendingApiKey, apiKeyId, ...rest } = existing;
+      await writeConfig(cf, accountId, namespaceId, {
+        ...(rest as DeployerConfig),
+        keyRotatedAt: nowIso,
+        updatedAt: nowIso,
+      });
+    }
+  } catch {
+    /* non-fatal */
+  }
 
-  return { apiKey: newKey, config: promoted };
+  return { apiKey: newKey };
+}
+
+/** Resolve the endpoint bearer key for server-side test proxies. */
+export function sessionWorkerKey(
+  workerKeys: Record<string, string> | undefined,
+  workerName: string
+): string | null {
+  return workerKeys?.[workerName] ?? null;
+}
+
+/**
+ * Resolve the target base URL + bearer key for the in-browser testers.
+ * The key comes from the session only; if this session didn't generate one
+ * (deploy/cycle), testing requires renewing the key first.
+ */
+export async function resolveTestTarget(
+  cf: CloudflareClient,
+  session: { accountId: string; subdomain?: string; workerKeys?: Record<string, string> },
+  workerName: string
+): Promise<{ baseUrl: string; apiKey: string } | { error: string }> {
+  const name = sanitizeWorkerName(workerName);
+  const apiKey = sessionWorkerKey(session.workerKeys, name);
+  if (!apiKey) {
+    return {
+      error:
+        'No endpoint key in this session — keys are never stored. Renew the API key on the dashboard, then try again.',
+    };
+  }
+  const subdomain = session.subdomain ?? (await cf.getWorkersSubdomain(session.accountId));
+  if (!subdomain) return { error: 'No workers.dev subdomain on this account.' };
+  return { baseUrl: buildBaseUrl(name, subdomain), apiKey };
 }

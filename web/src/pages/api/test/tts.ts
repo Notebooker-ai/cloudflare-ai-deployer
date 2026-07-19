@@ -1,6 +1,6 @@
 import type { APIContext } from 'astro';
 import { requireSession } from '../../../lib/auth';
-import { discover } from '../../../lib/deployer';
+import { resolveTestTarget } from '../../../lib/deployer';
 import { json, toErrorResponse } from '../../../lib/util';
 
 export const prerender = false;
@@ -14,16 +14,13 @@ export async function POST(ctx: APIContext) {
     const input = (body.input ?? '').toString();
     if (!input.trim()) return json({ error: 'Nothing to speak.' }, 400);
 
-    const subdomain = session.subdomain ?? (await cf.getWorkersSubdomain(session.accountId));
-    const state = await discover(cf, session.accountId, subdomain, workerName);
-    if (!state.config?.apiKey || !state.config?.baseUrl) {
-      return json({ error: 'No deployed endpoint or key found.' }, 400);
-    }
+    const target = await resolveTestTarget(cf, session, workerName);
+    if ('error' in target) return json({ error: target.error }, 400);
 
-    const upstream = await fetch(`${state.config.baseUrl}/audio/speech`, {
+    const upstream = await fetch(`${target.baseUrl}/audio/speech`, {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${state.config.apiKey}`,
+        Authorization: `Bearer ${target.apiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ model: 'text_to_speech', input, voice: body.voice }),

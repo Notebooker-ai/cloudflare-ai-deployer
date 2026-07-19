@@ -16,9 +16,13 @@ export interface DeployerConfig {
   workerName: string;
   baseUrl: string;
   models: ModelConfig;
-  apiKey: string;
-  apiKeyId: string;
-  /** Set transiently during key rotation; promoted to apiKey on success. */
+  /**
+   * LEGACY (schema v1 originally stored the key here). The endpoint key is no
+   * longer persisted anywhere — it lives only in the encrypted session cookie
+   * and must be cycled to view again. Old blobs are scrubbed on discovery.
+   */
+  apiKey?: string;
+  apiKeyId?: string;
   pendingApiKey?: string;
   createdAt: string;
   updatedAt: string;

@@ -1,20 +1,38 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 interface Props {
   workerName: string;
   baseUrl: string;
-  apiKey: string | null;
-  recoverable: boolean;
-  onRotated: (newKey: string) => void;
+  /** Key minted earlier in this page's flow (e.g. first deploy), if any. */
+  initialKey?: string | null;
 }
 
-export default function ApiKeyPanel({ workerName, baseUrl, apiKey, recoverable, onRotated }: Props) {
+export default function ApiKeyPanel({ workerName, baseUrl, initialKey }: Props) {
+  const [key, setKey] = useState<string | null>(initialKey ?? null);
+  const [loaded, setLoaded] = useState(!!initialKey);
   const [revealed, setRevealed] = useState(false);
   const [copied, setCopied] = useState<'key' | 'url' | null>(null);
   const [cycling, setCycling] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [key, setKey] = useState(apiKey);
+
+  // Recover a key generated earlier in this session (cookie-held only).
+  useEffect(() => {
+    if (initialKey) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(`/api/apikey?worker=${encodeURIComponent(workerName)}`);
+        const data = await res.json();
+        if (!cancelled && res.ok) setKey(data.apiKey ?? null);
+      } finally {
+        if (!cancelled) setLoaded(true);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [workerName, initialKey]);
 
   async function copy(text: string, which: 'key' | 'url') {
     await navigator.clipboard.writeText(text);
@@ -32,13 +50,12 @@ export default function ApiKeyPanel({ workerName, baseUrl, apiKey, recoverable, 
         body: JSON.stringify({ workerName }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to cycle key');
+      if (!res.ok) throw new Error(data.error || 'Failed to renew key');
       setKey(data.apiKey);
       setRevealed(true);
-      onRotated(data.apiKey);
       setConfirming(false);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to cycle key');
+      setError(e instanceof Error ? e.message : 'Failed to renew key');
     } finally {
       setCycling(false);
     }
@@ -66,7 +83,9 @@ export default function ApiKeyPanel({ workerName, baseUrl, apiKey, recoverable, 
       </div>
 
       <label className="label mt-5 mb-2">Bearer API key</label>
-      {key ? (
+      {!loaded ? (
+        <p className="text-[13px] text-ink-faint">Checking this session…</p>
+      ) : key ? (
         <>
           <div className="flex items-center gap-2">
             <code className="field overflow-x-auto whitespace-nowrap font-mono text-[13px]">
@@ -82,46 +101,46 @@ export default function ApiKeyPanel({ workerName, baseUrl, apiKey, recoverable, 
               {copied === 'key' ? 'Copied' : 'Copy'}
             </button>
           </div>
-
-          <div className="mt-5 border-t border-line pt-4 dark:border-line-dark">
-            {!confirming ? (
-              <button className="btn btn-outline btn-sm" onClick={() => setConfirming(true)}>
-                Cycle key…
-              </button>
-            ) : (
-              <div className="rounded-[3px] border border-accent/40 bg-accent-soft/30 p-3 dark:bg-accent-softinvert/20">
-                <p className="text-[13px] text-ink-soft dark:text-ink-softinvert">
-                  Rotating replaces the key immediately. Any client using the old key will get{' '}
-                  <span className="font-semibold">401</span> once it propagates. Continue?
-                </p>
-                <div className="mt-3 flex gap-2">
-                  <button className="btn btn-primary btn-sm" onClick={cycle} disabled={cycling}>
-                    {cycling ? 'Cycling…' : 'Yes, rotate now'}
-                  </button>
-                  <button
-                    className="btn btn-outline btn-sm"
-                    onClick={() => setConfirming(false)}
-                    disabled={cycling}
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
+          <p className="mt-2 text-[12px] text-ink-faint">
+            Copy it now — we never store this key. It's visible only for this browser session;
+            after that, renewing is the only way to see a key here again.
+          </p>
         </>
       ) : (
         <div className="rounded-[3px] border border-line bg-paper-deep p-3 text-[13px] text-ink-soft dark:border-line-dark dark:bg-night-deep dark:text-ink-softinvert">
-          {recoverable
-            ? 'No key stored.'
-            : 'Your key can’t be recovered (Cloudflare secrets are write-only). Cycle to generate a new one.'}
-          <div className="mt-3">
-            <button className="btn btn-primary btn-sm" onClick={cycle} disabled={cycling}>
-              {cycling ? 'Generating…' : 'Generate a new key'}
-            </button>
-          </div>
+          Your endpoint key isn't viewable — keys are never stored, and this session didn't
+          generate one. Your existing key keeps working for API clients that already have it; to
+          see one here again, renew it below (this <span className="font-semibold">replaces</span>{' '}
+          the old key).
         </div>
       )}
+
+      <div className="mt-5 border-t border-line pt-4 dark:border-line-dark">
+        {!confirming ? (
+          <button className="btn btn-outline btn-sm" onClick={() => setConfirming(true)}>
+            {key ? 'Renew key…' : 'Renew key to view…'}
+          </button>
+        ) : (
+          <div className="rounded-[3px] border border-accent/40 bg-accent-soft/30 p-3 dark:bg-accent-softinvert/20">
+            <p className="text-[13px] text-ink-soft dark:text-ink-softinvert">
+              Renewing replaces the key immediately. Any client using the old key will get{' '}
+              <span className="font-semibold">401</span> once it propagates. Continue?
+            </p>
+            <div className="mt-3 flex gap-2">
+              <button className="btn btn-primary btn-sm" onClick={cycle} disabled={cycling}>
+                {cycling ? 'Renewing…' : 'Yes, renew now'}
+              </button>
+              <button
+                className="btn btn-outline btn-sm"
+                onClick={() => setConfirming(false)}
+                disabled={cycling}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
 
       {error && (
         <p className="mt-3 text-[13px] font-semibold text-red-700 dark:text-red-400">{error}</p>

@@ -60,6 +60,19 @@ export default function TokenGate() {
         >
           {showGuide ? 'Hide' : 'How do I create a token?'}
         </button>
+        <div className="mt-5 border-t border-line pt-4 text-[12px] text-ink-faint dark:border-line-dark">
+          <p>
+            <span className="font-semibold">We never save your Cloudflare token</span> — it lives
+            only in an encrypted cookie that expires with your session. For best security, delete
+            the token in your Cloudflare dashboard when you're done here; creating a new one later
+            lets you view this dashboard again.
+          </p>
+          <p className="mt-2">
+            Your endpoint's API key is never saved either — it's shown only when created or
+            renewed. To display it here again on a later visit, renew it from the dashboard (the
+            old key stops working).
+          </p>
+        </div>
       </form>
 
       <div className="card">

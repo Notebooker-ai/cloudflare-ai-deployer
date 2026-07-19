@@ -14,13 +14,12 @@ const DEFAULT_MODELS: ModelConfig = {
   embedding: '@cf/baai/bge-base-en-v1.5',
 };
 
-type StateKind = 'first-visit' | 'healthy' | 'key-unrecoverable' | 'worker-missing' | 'drift';
+type StateKind = 'first-visit' | 'healthy' | 'no-saved-config' | 'worker-missing' | 'drift';
 
 interface DeployerConfig {
   workerName: string;
   baseUrl: string;
   models: ModelConfig;
-  apiKey: string;
   keyRotatedAt?: string;
 }
 
@@ -181,12 +180,17 @@ function Onboarding({ state, onDeployed }: { state: DashboardState; onDeployed: 
 }
 
 function Manage({ state }: { state: DashboardState }) {
-  const config = state.config!;
+  // 'no-saved-config': KV blob is gone but the worker is live — derive a
+  // working config from the live script + subdomain.
+  const config: DeployerConfig = state.config ?? {
+    workerName: state.workerName!,
+    baseUrl: `https://${state.workerName}.${state.subdomain}.workers.dev/v1`,
+    models: state.liveModels ?? {},
+  };
   const [models, setModels] = useState<ModelConfig>(config.models);
   const [savedModels, setSavedModels] = useState<ModelConfig>(config.models);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [apiKey, setApiKey] = useState<string | null>(config.apiKey ?? null);
 
   const dirty = JSON.stringify(models) !== JSON.stringify(savedModels);
 
@@ -221,13 +225,7 @@ function Manage({ state }: { state: DashboardState }) {
       )}
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <ApiKeyPanel
-          workerName={config.workerName}
-          baseUrl={config.baseUrl}
-          apiKey={apiKey}
-          recoverable={state.kind !== 'key-unrecoverable'}
-          onRotated={(k) => setApiKey(k)}
-        />
+        <ApiKeyPanel workerName={config.workerName} baseUrl={config.baseUrl} />
         <UsagePanel />
       </div>
 

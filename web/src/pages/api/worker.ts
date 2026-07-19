@@ -1,7 +1,8 @@
 import type { APIContext } from 'astro';
-import { requireSession } from '../../lib/auth';
+import { requireSession, updateSession } from '../../lib/auth';
 import { discover, deploy } from '../../lib/deployer';
 import { json, toErrorResponse } from '../../lib/util';
+import { sanitizeWorkerName } from '../../lib/util';
 import type { ModelConfig } from '../../lib/template';
 
 export const prerender = false;
@@ -42,17 +43,24 @@ export async function POST(ctx: APIContext) {
       );
     }
 
-    // Reuse the existing key on redeploy so clients keep working.
-    const existing = await discover(cf, session.accountId, subdomain, workerNameRaw);
-    const reuseKey = existing.config?.apiKey;
-    const reuseKeyId = existing.config?.apiKeyId;
+    // Redeploys carry the existing secret forward (inherit binding), so model
+    // changes never touch the key. Only a first deploy mints one.
+    const workerName = sanitizeWorkerName(workerNameRaw);
+    const workerExists = await cf.scriptExists(session.accountId, workerName);
 
     const result = await deploy(cf, session.accountId, subdomain, {
       workerNameRaw,
       models,
-      apiKey: reuseKey,
-      apiKeyId: reuseKeyId,
+      workerExists,
     });
+
+    // A newly minted key is held only in the encrypted session cookie so the
+    // dashboard can display it and the testers can use it. Never persisted.
+    if (result.apiKey) {
+      await updateSession(ctx, session, {
+        workerKeys: { ...session.workerKeys, [result.workerName]: result.apiKey },
+      });
+    }
 
     return json({ ok: true, ...result });
   } catch (e) {

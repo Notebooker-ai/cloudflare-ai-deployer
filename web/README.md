@@ -8,12 +8,19 @@ and an estimated free-neuron usage monitor.
 - **No login, no database.** A visitor pastes a scoped Cloudflare API token; it
   lives only in an AES-GCM-encrypted, expiring `HttpOnly` cookie. Every
   Cloudflare call is proxied server-side so the token never reaches the browser.
+  Users are advised to delete the token in Cloudflare when done — a new token
+  restores dashboard access on a later visit.
 - **Config remembered across visits with zero server state.** The generated
-  config (models + a readable copy of the API key) is stored in a KV namespace
+  config (worker name + models — never secrets) is stored in a KV namespace
   **in the user's own account**, titled `cf-ai-deployer:<workerName>`. On a
-  return visit we rediscover it by listing their namespaces. (The API key is kept
-  in KV because Cloudflare `secret_text` bindings are write-only and can't be read
-  back for display/copy.)
+  return visit we rediscover it by listing their namespaces.
+- **The endpoint API key is never persisted anywhere.** It exists as the
+  worker's write-only `secret_text` binding (enforcement) and, transiently, in
+  the session cookie (display + in-browser testing). Redeploys carry the secret
+  forward with an `inherit` binding, so model changes never touch the key. On a
+  return visit the key can't be shown — the user renews (cycles) it to view a
+  new one, which replaces the old. Legacy KV blobs that stored a key are
+  scrubbed on first discovery.
 - The deployable worker is the repo's shared `../workers/template-unified.js`,
   imported via Vite `?raw` and injected exactly like the `deploy.js` CLI.
 
