@@ -254,6 +254,28 @@ async function handleChatCompletions(request, env, ctx) {
         if (tokenLimit) modelOptions.max_tokens = tokenLimit;
         if (temperature !== undefined) modelOptions.temperature = temperature;
 
+        // Qwen3 reserves a large share of its context window for "thinking",
+        // which starves real output and invites 3030 overflows. Disable
+        // thinking via the /no_think suffix and, when the caller didn't set a
+        // token limit, cap output to the estimated remaining headroom.
+        if (cfModel.startsWith('@cf/qwen/qwen3')) {
+            const msgs = modelOptions.messages;
+            for (let i = msgs.length - 1; i >= 0; i--) {
+                if (msgs[i].role === 'user' && typeof msgs[i].content === 'string') {
+                    msgs[i] = { ...msgs[i], content: msgs[i].content + ' /no_think' };
+                    break;
+                }
+            }
+            if (!modelOptions.max_tokens) {
+                const totalInputChars = msgs.reduce(
+                    (sum, m) => sum + (typeof m.content === 'string' ? m.content.length : 0),
+                    0
+                );
+                const available = 31000 - Math.ceil(totalInputChars / 3);
+                if (available > 0) modelOptions.max_tokens = Math.min(available, 8192);
+            }
+        }
+
         if (stream) {
             const response = await retryAIRun(env, cfModel, modelOptions);
             const completionId = `chatcmpl-${crypto.randomUUID()}`;
