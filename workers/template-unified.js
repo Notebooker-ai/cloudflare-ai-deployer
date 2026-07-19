@@ -360,6 +360,7 @@ async function handleTranscription(request, env) {
     try {
         const contentType = request.headers.get('content-type') || '';
         let audioData;
+        let audioContentType = null;
         let model = 'speech_to_text';
         let language = null;
 
@@ -370,6 +371,7 @@ async function handleTranscription(request, env) {
                 return jsonResponse({ error: { message: 'audio file is required', type: 'invalid_request_error' } }, 400);
             }
             audioData = await file.arrayBuffer();
+            if (file.type) audioContentType = file.type;
             language = formData.get('language');
             if (formData.get('model')) model = formData.get('model');
         } else if (contentType.includes('application/json')) {
@@ -378,10 +380,12 @@ async function handleTranscription(request, env) {
                 return jsonResponse({ error: { message: 'audio field is required', type: 'invalid_request_error' } }, 400);
             }
             audioData = Uint8Array.from(atob(body.audio), c => c.charCodeAt(0)).buffer;
+            audioContentType = body.content_type || null;
             language = body.language;
             if (body.model) model = body.model;
         } else {
             audioData = await request.arrayBuffer();
+            if (contentType) audioContentType = contentType;
         }
 
         const cfModel = resolveModel(model, 'speech_to_text');
@@ -394,18 +398,41 @@ async function handleTranscription(request, env) {
             }, 400);
         }
 
-        const uint8Array = new Uint8Array(audioData);
-        let binary = '';
-        for (let i = 0; i < uint8Array.length; i++) {
-            binary += String.fromCharCode(uint8Array[i]);
+        // STT input schemas differ by model: Deepgram (nova) takes
+        // { audio: { body, contentType } } and nests the transcript under
+        // results.channels[].alternatives[]; legacy Whisper models take a raw
+        // byte array; whisper-large-v3-turbo takes base64. All but Deepgram
+        // return a flat `text` field.
+        const isDeepgram = cfModel.startsWith('@cf/deepgram/');
+        const isLegacyWhisper =
+            cfModel === '@cf/openai/whisper' || cfModel === '@cf/openai/whisper-tiny-en';
+        let modelOptions;
+        if (isDeepgram) {
+            modelOptions = {
+                audio: {
+                    body: new Uint8Array(audioData),
+                    contentType: audioContentType || 'audio/mpeg',
+                },
+            };
+        } else if (isLegacyWhisper) {
+            modelOptions = { audio: [...new Uint8Array(audioData)] };
+        } else {
+            const uint8Array = new Uint8Array(audioData);
+            let binary = '';
+            for (let i = 0; i < uint8Array.length; i++) {
+                binary += String.fromCharCode(uint8Array[i]);
+            }
+            const base64Audio = btoa(binary);
+            modelOptions = { audio: base64Audio, task: 'transcribe' };
+            if (language) modelOptions.language = language;
         }
-        const base64Audio = btoa(binary);
-
-        const modelOptions = { audio: base64Audio, task: 'transcribe' };
-        if (language) modelOptions.language = language;
 
         const response = await retryAIRun(env, cfModel, modelOptions);
-        return jsonResponse({ text: response.text });
+        const text =
+            response?.text ??
+            response?.results?.channels?.[0]?.alternatives?.[0]?.transcript ??
+            '';
+        return jsonResponse({ text });
     } catch (error) {
         console.error('Transcription error:', error);
         return jsonResponse({ error: { message: error.message || 'Internal server error', type: 'server_error' } }, 500);
@@ -435,25 +462,36 @@ async function handleSpeech(request, env) {
             }, 400);
         }
 
-        const modelOptions = { prompt: input, lang: 'en' };
+        // TTS input schemas differ by model family: Deepgram Aura expects
+        // { text, speaker? } and streams MPEG audio back; MeloTTS expects
+        // { prompt, lang } and returns base64 WAV in a JSON `audio` field.
+        const isDeepgram = cfModel.startsWith('@cf/deepgram/');
+        const modelOptions = isDeepgram
+            ? { text: input }
+            : { prompt: input, lang: 'en' };
         if (voice) modelOptions.speaker = voice;
 
         const response = await retryAIRun(env, cfModel, modelOptions);
 
         let audioBytes;
-        if (response.audio) {
+        let mime = 'audio/wav';
+        let filename = 'speech.wav';
+        if (response && response.audio) {
             audioBytes = Uint8Array.from(atob(response.audio), c => c.charCodeAt(0));
         } else if (response instanceof ArrayBuffer || response instanceof Uint8Array) {
             audioBytes = new Uint8Array(response);
+            if (isDeepgram) { mime = 'audio/mpeg'; filename = 'speech.mp3'; }
         } else {
+            // ReadableStream (e.g. Aura) — pass straight through.
             audioBytes = response;
+            if (isDeepgram) { mime = 'audio/mpeg'; filename = 'speech.mp3'; }
         }
 
         return new Response(audioBytes, {
             status: 200,
             headers: {
-                'Content-Type': 'audio/wav',
-                'Content-Disposition': 'attachment; filename="speech.wav"',
+                'Content-Type': mime,
+                'Content-Disposition': `attachment; filename="${filename}"`,
                 ...corsHeaders(),
             },
         });

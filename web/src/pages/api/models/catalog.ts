@@ -5,6 +5,11 @@ import { json, toErrorResponse } from '../../../lib/util';
 
 export const prerender = false;
 
+/** Models that cannot work in the worker's request/response API. */
+const EXCLUDED_MODELS = new Set([
+  '@cf/deepgram/flux', // WebSocket-only ("only supports websocket connections")
+]);
+
 /** Live Workers AI catalog, grouped by our model slots. Powers the pickers. */
 export async function GET(ctx: APIContext) {
   try {
@@ -27,7 +32,7 @@ export async function GET(ctx: APIContext) {
               id: m.name ?? m.id,
               description: m.description ?? '',
             }))
-            .filter((m) => m.id)
+            .filter((m) => m.id && !EXCLUDED_MODELS.has(m.id))
             .sort((a, b) => a.id.localeCompare(b.id)),
         };
       })

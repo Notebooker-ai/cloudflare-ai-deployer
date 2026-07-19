@@ -3,6 +3,8 @@ import ModelPicker, { type ModelConfig } from './ModelPicker';
 import ApiKeyPanel from './ApiKeyPanel';
 import ChatTester from './ChatTester';
 import TtsTester from './TtsTester';
+import SttTester from './SttTester';
+import VisionTester from './VisionTester';
 import UsagePanel from './UsagePanel';
 
 const DEFAULT_MODELS: ModelConfig = {
@@ -133,6 +135,25 @@ function Onboarding({ state, onDeployed }: { state: DashboardState; onDeployed: 
           We found saved config but the worker is gone. Redeploy to bring it back.
         </div>
       )}
+      {!state.subdomain && (
+        <div className="mb-4 rounded-[3px] border border-red-400 bg-red-50 p-3 text-[13px] dark:border-red-700 dark:bg-red-950/40">
+          <p className="font-semibold">Your account has no workers.dev subdomain yet.</p>
+          <p className="mt-1">
+            Deploys will fail until it exists. Open{' '}
+            <a
+              className="font-semibold text-accent hover:underline dark:text-accent-invert"
+              href="https://dash.cloudflare.com/?to=/:account/workers-and-pages"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Workers &amp; Pages in your Cloudflare dashboard
+            </a>{' '}
+            once and register your subdomain (it will prompt you the first time). Also make sure
+            your Cloudflare account email is verified — unverified accounts can’t deploy Workers.
+            Then come back and hit Deploy.
+          </p>
+        </div>
+      )}
       <label className="label mb-2">Worker name</label>
       <input
         className="field font-mono"
@@ -232,6 +253,10 @@ function Manage({ state }: { state: DashboardState }) {
       <div className="grid gap-6 lg:grid-cols-2">
         {savedModels.chat && <ChatTester workerName={config.workerName} />}
         {savedModels.text_to_speech && <TtsTester workerName={config.workerName} />}
+        {savedModels.speech_to_text && <SttTester workerName={config.workerName} />}
+        {savedModels.chat && (
+          <VisionTester workerName={config.workerName} chatModel={savedModels.chat} />
+        )}
       </div>
     </div>
   );

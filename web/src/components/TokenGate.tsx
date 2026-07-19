@@ -63,7 +63,30 @@ export default function TokenGate() {
       </form>
 
       <div className="card">
-        <h3 className="font-serif text-xl font-medium">What the token needs</h3>
+        <h3 className="font-serif text-xl font-medium">Before you start</h3>
+        <ol className="mt-3 list-decimal space-y-2 pl-5 text-[14px] text-ink-soft dark:text-ink-softinvert">
+          <li>
+            <span className="font-semibold text-ink dark:text-ink-invert">Verify your email</span>{' '}
+            with Cloudflare — unverified accounts can’t deploy Workers.
+          </li>
+          <li>
+            Visit{' '}
+            <a
+              className="text-accent hover:underline dark:text-accent-invert"
+              href="https://dash.cloudflare.com/?to=/:account/ai/workers-ai"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Workers AI in your dashboard
+            </a>{' '}
+            once, and register your{' '}
+            <span className="font-mono text-[13px]">workers.dev</span> subdomain when prompted
+            (Workers &amp; Pages does this on first visit).
+          </li>
+          <li>Create the API token below and paste it here.</li>
+        </ol>
+
+        <h3 className="mt-6 font-serif text-xl font-medium">What the token needs</h3>
         <p className="mt-2 text-[14px] text-ink-soft dark:text-ink-softinvert">
           Create a <span className="font-semibold">Custom Token</span> scoped to a single account
           with these permissions:

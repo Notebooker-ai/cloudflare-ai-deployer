@@ -36,7 +36,7 @@ export async function POST(ctx: APIContext) {
       return json(
         {
           error:
-            'No workers.dev subdomain is registered on this account. Enable it once in the Cloudflare dashboard (Workers & Pages → your subdomain), then retry.',
+            'No workers.dev subdomain is registered on this account. Visit Workers & Pages (or Workers AI) in your Cloudflare dashboard once to register your subdomain — and make sure your account email is verified — then retry.',
         },
         400
       );
